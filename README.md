@@ -1,0 +1,147 @@
+# 🛒 Harar Mart
+
+> **Your Local Grocery Delivery** — a B2B e-commerce web platform connecting local suppliers and buyers in Harar, Ethiopia.
+
+🌐 **Live Site:** [ethiogeeksoffcial-boop.github.io/harar-mart](https://ethiogeeksoffcial-boop.github.io/harar-mart/)
+
+---
+
+## 📋 Table of Contents
+
+- [About](#about)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+- [Project Structure](#project-structure)
+- [Available Scripts](#available-scripts)
+- [Deployment](#deployment)
+- [Contributing](#contributing)
+
+---
+
+## About
+
+Harar Mart is a modern B2B e-commerce website built for local grocery suppliers and buyers in Harar, Ethiopia. It provides a clean, fast, and mobile-friendly storefront experience powered by React and Vite.
+
+---
+
+## Tech Stack
+
+| Category | Technology |
+|---|---|
+| Framework | [React 18](https://react.dev) |
+| Build Tool | [Vite 5](https://vitejs.dev) |
+| Language | TypeScript |
+| Styling | [Tailwind CSS](https://tailwindcss.com) + [tailwindcss-animate](https://github.com/jamiebuilds/tailwindcss-animate) |
+| UI Components | [shadcn/ui](https://ui.shadcn.com) (Radix UI primitives) |
+| Routing | [React Router DOM v6](https://reactrouter.com) |
+| Forms | [React Hook Form](https://react-hook-form.com) + [Zod](https://zod.dev) |
+| Backend / Auth | [Supabase](https://supabase.com) |
+| Charts | [Recharts](https://recharts.org) |
+| Icons | [Lucide React](https://lucide.dev) |
+| Notifications | [Sonner](https://sonner.emilkowal.ski) |
+| Date Utilities | [date-fns](https://date-fns.org) |
+| Carousel | [Embla Carousel](https://www.embla-carousel.com) |
+| Hosting | GitHub Pages |
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) v18 or higher
+- npm v9 or higher
+
+### Installation
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/ethiogeeksoffcial-boop/harar-mart.git
+cd harar-mart
+
+# 2. Install dependencies
+npm install
+
+# 3. Start the development server
+npm run dev
+```
+
+The app will be available at `http://localhost:5173`.
+
+### Environment Variables
+
+Create a `.env` file in the project root and add your Supabase credentials:
+
+```env
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+---
+
+## Project Structure
+
+```
+harar-mart/
+├── .github/
+│   └── workflows/
+│       └── deploy.yml        # CI/CD — builds and deploys to GitHub Pages
+├── public/                   # Static assets
+├── src/
+│   ├── components/           # Reusable UI components
+│   ├── pages/                # Route-level page components
+│   ├── lib/                  # Utilities and helpers
+│   ├── App.tsx               # Root component and route definitions
+│   └── main.tsx              # Application entry point
+├── index.html
+├── vite.config.ts            # Vite config (base path set for GitHub Pages)
+├── tailwind.config.ts
+├── tsconfig.json
+└── package.json
+```
+
+---
+
+## Available Scripts
+
+```bash
+npm run dev       # Start local development server
+npm run build     # Type-check and build for production (outputs to /dist)
+npm run preview   # Preview the production build locally
+npm run lint      # Run ESLint
+```
+
+---
+
+## Deployment
+
+The project is automatically deployed to **GitHub Pages** via GitHub Actions on every push to the `main` branch.
+
+The workflow (`.github/workflows/deploy.yml`):
+1. Installs dependencies with `npm ci`
+2. Runs `npm run build` to compile the app into `/dist`
+3. Deploys the `/dist` folder to GitHub Pages
+
+> **Note:** `vite.config.ts` sets `base: '/harar-mart/'` so all asset paths resolve correctly under the GitHub Pages subdirectory.
+
+To deploy manually:
+```bash
+npm run build
+# then push the /dist folder to your gh-pages branch
+```
+
+---
+
+## Contributing
+
+Contributions, issues and feature requests are welcome!
+
+1. Fork the repository
+2. Create your feature branch: `git checkout -b feature/your-feature`
+3. Commit your changes: `git commit -m 'Add your feature'`
+4. Push to the branch: `git push origin feature/your-feature`
+5. Open a Pull Request
+
+---
+
+<p align="center">Made with ❤️ by <a href="https://github.com/ethiogeeksoffcial-boop">EthioGeeks</a> — Harar, Ethiopia</p>
