@@ -142,6 +142,22 @@ export default function Home() {
                 </Link>
               </div>
 
+              {/* TEMP: Dashboard quick-access buttons while auth is disabled */}
+              <div className="flex flex-wrap gap-4 pt-2 border-t border-border/50">
+                <Link to="/seller/products">
+                  <Button size="lg" variant="secondary" className="h-12 px-8">
+                    <Building2 className="mr-2 h-5 w-5" />
+                    Seller Dashboard
+                  </Button>
+                </Link>
+                <Link to="/admin/dashboard">
+                  <Button size="lg" variant="secondary" className="h-12 px-8">
+                    <Package className="mr-2 h-5 w-5" />
+                    Admin Dashboard
+                  </Button>
+                </Link>
+              </div>
+
               {/* Stats */}
               <div className="flex gap-8 pt-4">
                 <div>

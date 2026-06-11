@@ -19,6 +19,58 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+// TEMP: Bypass auth while Google OAuth is being fixed.
+// Set to true to skip authentication and use mock users.
+const BYPASS_AUTH = true
+
+const MOCK_ADMIN_USER: User = {
+  id: 'mock-admin-id',
+  email: 'admin@hararmart.com',
+  full_name: 'Admin User',
+  phone: null,
+  address: null,
+  role: 'admin',
+  is_verified: true,
+  country: 'Ethiopia',
+  created_at: new Date().toISOString(),
+}
+
+const MOCK_SELLER_USER: User = {
+  id: 'mock-seller-id',
+  email: 'seller@hararmart.com',
+  full_name: 'Seller User',
+  phone: null,
+  address: null,
+  role: 'seller',
+  is_verified: true,
+  country: 'Ethiopia',
+  created_at: new Date().toISOString(),
+}
+
+const MOCK_BUYER_USER: User = {
+  id: 'mock-buyer-id',
+  email: 'buyer@hararmart.com',
+  full_name: 'Buyer User',
+  phone: null,
+  address: null,
+  role: 'buyer',
+  is_verified: true,
+  country: 'Ethiopia',
+  created_at: new Date().toISOString(),
+}
+
+const MOCK_SELLER_PROFILE: SellerProfile = {
+  id: 'mock-seller-profile-id',
+  user_id: 'mock-seller-id',
+  company_name: 'Mock Trading Co',
+  tax_id: 'TX123456',
+  business_license_url: null,
+  certifications: ['ISO9001'],
+  supplier_type: 'manufacturer',
+  is_verified: true,
+  created_at: new Date().toISOString(),
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [sellerProfile, setSellerProfile] = useState<SellerProfile | null>(null)
@@ -26,10 +78,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profileFetchError, setProfileFetchError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Check for existing session on mount
+    if (BYPASS_AUTH) {
+      // Check URL to determine which mock user to use
+      const path = window.location.pathname
+      if (path.startsWith('/admin')) {
+        setUser(MOCK_ADMIN_USER)
+        setSellerProfile(null)
+      } else if (path.startsWith('/seller')) {
+        setUser(MOCK_SELLER_USER)
+        setSellerProfile(MOCK_SELLER_PROFILE)
+      } else {
+        setUser(MOCK_BUYER_USER)
+        setSellerProfile(null)
+      }
+      setLoading(false)
+      return
+    }
+
+    // Normal auth flow below
     checkUser()
 
-    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
         await fetchUserProfile(session.user.id)
