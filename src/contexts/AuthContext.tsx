@@ -59,51 +59,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .from('users')
         .select('*')
         .eq('id', userId)
-        .single()
+        .maybeSingle()
 
       if (error) {
-        // If the row doesn't exist yet (e.g. trigger hasn't fired, or user
-        // was created before the handle_new_user trigger existed), create it.
-        if (error.code === 'PGRST116') {
-          // Row not found — fetch user metadata from auth and create the row
-          const { data: { user: authUser } } = await supabase.auth.getUser()
-          if (authUser) {
-            const fullName = authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || ''
-            const { error: insertError } = await supabase.from('users').insert({
+        console.error('Error fetching user profile:', error)
+        setProfileFetchError('Unable to load user profile. Please try again.')
+        setLoading(false)
+        return
+      }
+
+      // If no user row exists yet (e.g. trigger hasn't fired, or user
+      // was created before the handle_new_user trigger existed), create it.
+      if (!data) {
+        const { data: { user: authUser } } = await supabase.auth.getUser()
+        if (authUser) {
+          const fullName = authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || ''
+          const { error: upsertError } = await supabase.from('users').upsert({
+            id: userId,
+            email: authUser.email!,
+            full_name: fullName,
+            role: 'buyer',
+            is_verified: false,
+          }, { onConflict: 'id' })
+          if (upsertError) {
+            console.error('Failed to create user profile row:', upsertError)
+            setProfileFetchError('Unable to create user profile. Please contact support.')
+            // Set a minimal user object so the app doesn't break
+            setUser({
               id: userId,
               email: authUser.email!,
               full_name: fullName,
+              phone: null,
+              address: null,
               role: 'buyer',
               is_verified: false,
+              country: null,
+              created_at: new Date().toISOString(),
             })
-            if (insertError) {
-              console.error('Failed to create user profile row:', insertError)
-              setProfileFetchError('Unable to create user profile. Please contact support.')
-              // Set a minimal user object so the app doesn't break
-              setUser({
-                id: userId,
-                email: authUser.email!,
-                full_name: fullName,
-                phone: null,
-                address: null,
-                role: 'buyer',
-                is_verified: false,
-                country: null,
-                created_at: new Date().toISOString(),
-              })
-            } else {
-              // Fetch the newly created row
-              const { data: newUser } = await supabase
-                .from('users')
-                .select('*')
-                .eq('id', userId)
-                .single()
-              if (newUser) setUser(newUser)
-            }
+          } else {
+            // Fetch the newly created row
+            const { data: newUser } = await supabase
+              .from('users')
+              .select('*')
+              .eq('id', userId)
+              .single()
+            if (newUser) setUser(newUser)
           }
-        } else {
-          console.error('Error fetching user profile:', error)
-          setProfileFetchError('Unable to load user profile. Please try again.')
         }
         setLoading(false)
         return
@@ -117,7 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .from('seller_profiles')
             .select('*')
             .eq('user_id', userId)
-            .single()
+            .maybeSingle()
           if (sellerError) {
             console.error('Error fetching seller profile:', sellerError)
             // Don't block sign-in if seller profile fetch fails
