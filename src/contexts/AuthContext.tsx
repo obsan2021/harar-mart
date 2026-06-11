@@ -7,7 +7,7 @@ interface AuthContextType {
   sellerProfile: SellerProfile | null
   loading: boolean
   signIn: (email: string, password: string) => Promise<void>
-  signUp: (email: string, password: string, fullName: string, role: 'buyer' | 'seller') => Promise<void>
+  signUp: (email: string, password: string, fullName: string) => Promise<void>
   signOut: () => Promise<void>
   isAdmin: boolean
   isSeller: boolean
@@ -24,9 +24,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     checkUser()
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
-        fetchUserProfile(session.user.id)
+        await fetchUserProfile(session.user.id)
       } else {
         setUser(null)
         setSellerProfile(null)
@@ -62,16 +62,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .select('*')
         .eq('id', userId)
         .single()
-      
+
       if (error) {
         console.error('Error fetching user profile:', error)
-        // Don't throw - just don't set the user
         return
       }
-      
+
       if (data) {
         setUser(data)
-        
+
         if (data.role === 'seller') {
           const { data: sellerData, error: sellerError } = await supabase
             .from('seller_profiles')
@@ -95,21 +94,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error
   }
 
-  async function signUp(email: string, password: string, fullName: string, role: 'buyer' | 'seller') {
+  async function signUp(email: string, password: string, fullName: string) {
+    // Everyone signs up as a buyer — the handle_new_user DB trigger
+    // will create the public.users row with role='buyer'.
+    // We pass full_name in user_metadata so the trigger can use it.
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          full_name: fullName,
+        },
+      },
     })
     if (error) throw error
-    
+
+    // If the DB trigger doesn't fire (e.g. on an existing project where
+    // it hasn't been applied yet), fall back to inserting manually.
     if (data.user) {
-      await supabase.from('users').insert({
-        id: data.user.id,
-        email,
-        full_name: fullName,
-        role,
-        is_verified: false,
-      })
+      // Check if the trigger already created the row
+      const { data: existing } = await supabase
+        .from('users')
+        .select('id')
+        .eq('id', data.user.id)
+        .single()
+
+      if (!existing) {
+        await supabase.from('users').insert({
+          id: data.user.id,
+          email,
+          full_name: fullName,
+          role: 'buyer',
+          is_verified: false,
+        })
+      }
     }
   }
 

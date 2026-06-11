@@ -27,12 +27,14 @@ const Partners = lazy(() => import('./pages/app/Partners'))
 const Contact = lazy(() => import('./pages/app/Contact'))
 const NotFound = lazy(() => import('./pages/app/NotFound'))
 const ComingSoon = lazy(() => import('./pages/ComingSoon'))
+const SellerApplication = lazy(() => import('./pages/app/SellerApplication'))
 const Dashboard = lazy(() => import('./pages/admin/Dashboard'))
 const Products = lazy(() => import('./pages/admin/Products'))
 const OrdersAdmin = lazy(() => import('./pages/admin/Orders'))
 const Users = lazy(() => import('./pages/admin/Users'))
 const DeliveryAgents = lazy(() => import('./pages/admin/DeliveryAgents'))
 const Sellers = lazy(() => import('./pages/admin/Sellers'))
+const AdminSellerApplications = lazy(() => import('./pages/admin/SellerApplications'))
 const SellerProducts = lazy(() => import('./pages/seller/Products'))
 const SellerInquiries = lazy(() => import('./pages/seller/Inquiries'))
 const SellerProfile = lazy(() => import('./pages/seller/Profile'))
@@ -76,7 +78,6 @@ function App() {
                 <Route path="shop" element={<Shop />} />
                 <Route path="products/:id" element={<ProductDetail />} />
                 <Route path="cart" element={<Cart />} />
-                <Route path="auth" element={<Auth />} />
                 <Route path="support" element={<Support />} />
                 <Route path="about" element={<About />} />
                 <Route path="careers" element={<Careers />} />
@@ -105,10 +106,14 @@ function App() {
                   <Route path="orders" element={<Orders />} />
                   <Route path="orders/:id" element={<OrderDetail />} />
                   <Route path="inquiries" element={<Inquiries />} />
+                  <Route path="become-a-seller" element={<SellerApplication />} />
                 </Route>
                 
                 <Route path="*" element={<NotFound />} />
               </Route>
+
+              {/* Standalone Auth Route (no nav/footer) */}
+              <Route path="auth" element={<Auth />} />
 
               {/* Admin Routes */}
               <Route path="/admin" element={<AdminLayout />}>
@@ -120,6 +125,7 @@ function App() {
                   <Route path="users" element={<Users />} />
                   <Route path="sellers" element={<Sellers />} />
                   <Route path="delivery-agents" element={<DeliveryAgents />} />
+                  <Route path="applications" element={<AdminSellerApplications />} />
                 </Route>
               </Route>
 
