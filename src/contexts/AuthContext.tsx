@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { supabase } from '@/integrations/supabase/client'
 import type { User, SellerProfile } from '@/integrations/supabase/types'
 
@@ -76,11 +77,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [sellerProfile, setSellerProfile] = useState<SellerProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [profileFetchError, setProfileFetchError] = useState<string | null>(null)
+  const location = useLocation()
 
+  // TEMP: Re-evaluate mock user whenever the route changes
   useEffect(() => {
     if (BYPASS_AUTH) {
-      // Check URL to determine which mock user to use
-      const path = window.location.pathname
+      const path = location.pathname
       if (path.startsWith('/admin')) {
         setUser(MOCK_ADMIN_USER)
         setSellerProfile(null)
@@ -94,6 +96,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false)
       return
     }
+  }, [location.pathname])
+
+  useEffect(() => {
+    if (BYPASS_AUTH) return
 
     // Normal auth flow below
     checkUser()
