@@ -4,11 +4,12 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useCart } from '@/contexts/CartContext'
 import { 
   ShoppingCart, User, LogOut, Menu, X, Search, 
-  MessageSquare, Globe, ChevronDown, Package 
+  MessageSquare, Globe, ChevronDown, Package
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import logoSrc from '@/assets/sta hararmart g1.png'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -64,9 +65,7 @@ export default function AppLayout() {
             <div className="flex items-center justify-between h-16 gap-4">
               {/* Logo */}
               <Link to="/" className="flex items-center gap-2 shrink-0">
-                <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center">
-                  <Package className="h-5 w-5 text-primary-foreground" />
-                </div>
+                <img src={logoSrc} alt="Harar Mart" className="h-9 w-9 rounded-lg object-cover" />
                 <span className="text-xl font-bold text-foreground hidden sm:block">
                   Harar Mart
                 </span>

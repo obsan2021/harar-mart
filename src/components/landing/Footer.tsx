@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { Mail, Phone, MapPin, Facebook, Twitter, Instagram } from 'lucide-react'
+import logoSrc from '@/assets/sta hararmart g1.png'
 
 export default function Footer() {
   return (
@@ -8,7 +9,10 @@ export default function Footer() {
       <div className="container mx-auto px-4 py-12">
         <div className="grid md:grid-cols-4 gap-8">
           <div>
-            <h3 className="font-bold text-lg mb-4">Harar Mart</h3>
+            <div className="flex items-center gap-2 mb-4">
+              <img src={logoSrc} alt="Harar Mart" className="h-8 w-8 rounded-lg object-cover" />
+              <h3 className="font-bold text-lg">Harar Mart</h3>
+            </div>
             <p className="text-sm text-muted-foreground">
               Your trusted grocery delivery partner. Fresh products, fast delivery.
             </p>

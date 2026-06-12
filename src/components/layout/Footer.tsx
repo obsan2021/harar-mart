@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom'
-import { Building2, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin, Youtube, ArrowRight } from 'lucide-react'
+import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin, Youtube, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import logoSrc from '@/assets/sta hararmart g1.png'
 
 const footerLinks = {
   product: [
@@ -81,9 +82,7 @@ export default function Footer() {
           {/* Logo and Tagline */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                <Building2 className="h-6 w-6 text-primary-foreground" />
-              </div>
+              <img src={logoSrc} alt="Harar Mart" className="h-10 w-10 rounded-lg object-cover" />
               <span className="text-xl font-bold">Harar Mart</span>
             </div>
             <p className="text-sm text-muted-foreground max-w-xs">
