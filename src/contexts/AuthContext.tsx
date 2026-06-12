@@ -128,128 +128,174 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   async function fetchUserProfile(userId: string) {
     try {
       setProfileFetchError(null)
-      // Select only core columns that should exist in all versions
-      const { data, error } = await supabase
-        .from('users')
-        .select('id, email, full_name, phone, address, role, created_at, is_verified, country')
-        .eq('id', userId)
-        .maybeSingle()
+      const selectUserRow = async () => {
+        return supabase
+          .from('users')
+          .select('id, email, full_name, phone, address, role, created_at, is_verified, country')
+          .eq('id', userId)
+          .maybeSingle()
+      }
 
+      const { data, error } = await selectUserRow()
       if (error) {
         console.error('Error fetching user profile:', error)
-        // If the error is about missing columns, try with just the basic columns
-        if (error.message.includes('column') || error.code === 'PGRST116') {
-          const { data: basicData, error: basicError } = await supabase
-            .from('users')
-            .select('id, email, full_name, role, created_at')
-            .eq('id', userId)
-            .maybeSingle()
-          
-          if (basicError) {
-            console.error('Error fetching basic user profile:', basicError)
-            setProfileFetchError('Unable to load user profile. Please try again.')
-            setLoading(false)
-            return
-          }
-          
-          if (basicData) {
-            setUser({
-              ...basicData,
-              phone: basicData.phone || null,
-              address: basicData.address || null,
-              is_verified: basicData.is_verified || false,
-              country: basicData.country || null,
-            })
-            setLoading(false)
-            return
-          }
-        } else {
-          setProfileFetchError('Unable to load user profile. Please try again.')
+        const fallbackSelect = await supabase
+          .from('users')
+          .select('id, email, full_name, role, created_at')
+          .eq('id', userId)
+          .maybeSingle()
+
+        if (fallbackSelect.error) {
+          console.error('Error fetching fallback user profile:', fallbackSelect.error)
+        } else if (fallbackSelect.data) {
+          setUser({
+            ...fallbackSelect.data,
+            phone: null,
+            address: null,
+            is_verified: false,
+            country: null,
+          })
           setLoading(false)
           return
         }
+
+        const { data: { user: authFallbackUser } } = await supabase.auth.getUser()
+        if (authFallbackUser) {
+          const role = (authFallbackUser.user_metadata?.role as User['role']) || 'buyer'
+          const fullName = authFallbackUser.user_metadata?.full_name || authFallbackUser.email?.split('@')[0] || ''
+          setUser({
+            id: authFallbackUser.id,
+            email: authFallbackUser.email || '',
+            full_name: fullName,
+            phone: null,
+            address: null,
+            role,
+            is_verified: false,
+            country: null,
+            created_at: new Date().toISOString(),
+          })
+          setLoading(false)
+          return
+        }
+
+        setProfileFetchError('Unable to load user profile. Please try again.')
+        setLoading(false)
+        return
       }
 
-      // If no user row exists yet (e.g. trigger hasn't fired, or user
-      // was created before the handle_new_user trigger existed), create it.
       if (!data) {
         const { data: { user: authUser } } = await supabase.auth.getUser()
         if (authUser) {
           const fullName = authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || ''
-          // Try to insert with minimal columns first
+          const role = (authUser.user_metadata?.role as User['role']) || 'buyer'
           const minimalInsert = {
             id: userId,
             email: authUser.email!,
             full_name: fullName,
-            role: 'buyer',
+            role,
+            is_verified: false,
+            country: null,
           }
-          
-          const { error: upsertError } = await supabase.from('users').upsert(minimalInsert, { onConflict: 'id' })
-          if (upsertError) {
-            console.error('Failed to create user profile row:', upsertError)
-            setProfileFetchError('Unable to create user profile. Please contact support.')
-            // Set a minimal user object so the app doesn't break
+
+          const { error: insertError } = await supabase.from('users').upsert(minimalInsert, {
+            onConflict: 'id',
+            ignoreDuplicates: true,
+          })
+
+          if (insertError) {
+            console.error('Failed to create user profile row:', insertError)
             setUser({
               id: userId,
               email: authUser.email!,
               full_name: fullName,
               phone: null,
               address: null,
-              role: 'buyer',
+              role,
               is_verified: false,
               country: null,
               created_at: new Date().toISOString(),
             })
-          } else {
-            // Fetch the newly created row with basic columns
-            const { data: newUser } = await supabase
-              .from('users')
-              .select('id, email, full_name, phone, address, role, created_at, is_verified, country')
-              .eq('id', userId)
-              .maybeSingle()
-            if (newUser) {
-              setUser({
-                ...newUser,
-                phone: newUser.phone || null,
-                address: newUser.address || null,
-                is_verified: newUser.is_verified || false,
-                country: newUser.country || null,
-              })
-            }
+            setLoading(false)
+            return
           }
+
+          const { data: newUser } = await selectUserRow()
+          if (newUser) {
+            setUser({
+              ...newUser,
+              phone: newUser.phone || null,
+              address: newUser.address || null,
+              is_verified: newUser.is_verified || false,
+              country: newUser.country || null,
+            })
+            setLoading(false)
+            return
+          }
+
+          setUser({
+            id: userId,
+            email: authUser.email!,
+            full_name: fullName,
+            phone: null,
+            address: null,
+            role,
+            is_verified: false,
+            country: null,
+            created_at: new Date().toISOString(),
+          })
+          setLoading(false)
+          return
         }
+
+        setProfileFetchError('Unable to load user profile. Please try again.')
         setLoading(false)
         return
       }
 
-      if (data) {
-        setUser({
-          ...data,
-          phone: data.phone || null,
-          address: data.address || null,
-          is_verified: data.is_verified || false,
-          country: data.country || null,
-        })
+      setUser({
+        ...data,
+        phone: data.phone || null,
+        address: data.address || null,
+        is_verified: data.is_verified || false,
+        country: data.country || null,
+      })
 
-        if (data.role === 'seller') {
-          const { data: sellerData, error: sellerError } = await supabase
-            .from('seller_profiles')
-            .select('*')
-            .eq('user_id', userId)
-            .maybeSingle()
-          if (sellerError) {
-            console.error('Error fetching seller profile:', sellerError)
-            // Don't block sign-in if seller profile fetch fails
-            setSellerProfile(null)
-          } else if (sellerData) {
-            setSellerProfile(sellerData)
-          }
+      if (data.role === 'seller') {
+        const { data: sellerData, error: sellerError } = await supabase
+          .from('seller_profiles')
+          .select('*')
+          .eq('user_id', userId)
+          .maybeSingle()
+        if (sellerError) {
+          console.error('Error fetching seller profile:', sellerError)
+          setSellerProfile(null)
+        } else if (sellerData) {
+          setSellerProfile(sellerData)
         }
       }
+
       setLoading(false)
     } catch (e) {
       console.error('Error in fetchUserProfile:', e)
-      setProfileFetchError('An unexpected error occurred. Please try again.')
+      const { data: { user: authFallbackUser } } = await supabase.auth.getUser()
+      if (authFallbackUser) {
+        const role = (authFallbackUser.user_metadata?.role as User['role']) || 'buyer'
+        const fullName = authFallbackUser.user_metadata?.full_name || authFallbackUser.email?.split('@')[0] || ''
+        setUser({
+          id: authFallbackUser.id,
+          email: authFallbackUser.email || '',
+          full_name: fullName,
+          phone: null,
+          address: null,
+          role,
+          is_verified: false,
+          country: null,
+          created_at: new Date().toISOString(),
+        })
+        setProfileFetchError(null)
+      } else {
+        setProfileFetchError('An unexpected error occurred. Please try again.')
+      }
       setLoading(false)
     }
   }
