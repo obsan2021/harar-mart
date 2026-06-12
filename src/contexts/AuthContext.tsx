@@ -103,9 +103,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Normal auth flow below
     checkUser()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
-        await fetchUserProfile(session.user.id)
+        // On INITIAL session (from getSession), the checkUser already handles it.
+        // Only fetch on actual auth events (SIGNED_IN, TOKEN_REFRESHED, USER_UPDATED)
+        if (event !== 'INITIAL_SESSION') {
+          await fetchUserProfile(session.user.id)
+        }
       } else {
         setUser(null)
         setSellerProfile(null)
@@ -118,11 +122,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   async function checkUser() {
-    const { data: { session } } = await supabase.auth.getSession()
-    if (session?.user) {
-      await fetchUserProfile(session.user.id)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user) {
+        await fetchUserProfile(session.user.id)
+      } else {
+        setLoading(false)
+      }
+    } catch (e) {
+      console.error('Error checking user session:', e)
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   async function fetchUserProfile(userId: string) {
