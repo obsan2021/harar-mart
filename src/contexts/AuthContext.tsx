@@ -68,6 +68,8 @@ const MOCK_SELLER_PROFILE: SellerProfile = {
   certifications: ['ISO9001'],
   supplier_type: 'manufacturer',
   is_verified: true,
+  didit_verification_status: 'approved',
+  didit_session_id: null,
   created_at: new Date().toISOString(),
 }
 
@@ -101,11 +103,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (BYPASS_AUTH) return
 
     let cancelled = false
+    let sessionInitialized = false
 
     // Safety timeout: ensure loading resolves within 8 seconds no matter what
     const safetyTimer = setTimeout(() => {
       if (!cancelled) setLoading(false)
     }, 8000)
+
+    const handleSession = async (session: any) => {
+      if (cancelled) return
+
+      if (session?.user) {
+        sessionInitialized = true
+        await fetchUserProfile(session.user.id)
+      } else if (!sessionInitialized) {
+        setUser(null)
+        setSellerProfile(null)
+        setProfileFetchError(null)
+        setLoading(false)
+      }
+    }
 
     // Step 1: Explicitly check for an existing session on mount.
     // onAuthStateChange's INITIAL_SESSION event can be missed if React
@@ -113,33 +130,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (cancelled) return
       clearTimeout(safetyTimer)
-
-      if (session?.user) {
-        fetchUserProfile(session.user.id)
-      } else {
-        setUser(null)
-        setSellerProfile(null)
-        setProfileFetchError(null)
-        setLoading(false)
-      }
+      handleSession(session)
     })
 
     // Step 2: Subscribe to subsequent auth state changes (login, logout,
     // token refresh). This handles events that happen AFTER mount.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      clearTimeout(safetyTimer)  // ADDED: Clear safety timer as first line
+      clearTimeout(safetyTimer)
       if (cancelled) return
-      
-      if (session?.user) {
-        // REMOVED: if (event !== 'INITIAL_SESSION') condition
-        // REMOVED: closing brace that went with it
-        await fetchUserProfile(session.user.id)
-      } else {
-        setUser(null)
-        setSellerProfile(null)
-        setProfileFetchError(null)
-        setLoading(false)
+
+      if (event === 'INITIAL_SESSION' && !session?.user) {
+        return
       }
+
+      await handleSession(session)
     })
 
     return () => {
