@@ -50,11 +50,10 @@ export default function Auth() {
       } else {
         await signUp(email, password, fullName)
       }
-      // Navigate immediately after successful auth.
-      // The useEffect above also handles role-based redirects when the
-      // user profile finishes loading, but this ensures the user isn't
-      // left stuck on the auth page if onAuthStateChange is delayed.
-      navigate(from, { replace: true })
+      // Don't navigate immediately — let the useEffect above handle
+      // role-based redirects once the user profile finishes loading.
+      // Navigating here creates a race condition where the user may
+      // be redirected before the session is fully established.
     } catch (err: any) {
       setError(err.message || 'An error occurred')
     } finally {

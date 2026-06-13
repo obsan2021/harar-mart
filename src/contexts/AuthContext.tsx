@@ -100,25 +100,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (BYPASS_AUTH) return
 
+    let cancelled = false
+
     // Safety timeout: ensure loading resolves within 8 seconds no matter what
     const safetyTimer = setTimeout(() => {
-      setLoading(false)
+      if (!cancelled) setLoading(false)
     }, 8000)
 
-    // onAuthStateChange is the single source of truth for all auth state.
-    // It fires INITIAL_SESSION on page load with the stored session,
-    // so we don't need a separate checkUser() call — that would create
-    // a race condition where both paths try to set state independently.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // Clear the safety timer once we get any event
+    // Step 1: Explicitly check for an existing session on mount.
+    // onAuthStateChange's INITIAL_SESSION event can be missed if React
+    // hasn't committed the effect yet, so we call getSession() to be safe.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (cancelled) return
       clearTimeout(safetyTimer)
 
       if (session?.user) {
-        // Handle ALL events — INITIAL_SESSION restores session on refresh,
-        // SIGNED_IN handles login, TOKEN_REFRESHED handles token rotation.
+        fetchUserProfile(session.user.id)
+      } else {
+        setUser(null)
+        setSellerProfile(null)
+        setProfileFetchError(null)
+        setLoading(false)
+      }
+    })
+
+    // Step 2: Subscribe to subsequent auth state changes (login, logout,
+    // token refresh). This handles events that happen AFTER mount.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (cancelled) return
+      clearTimeout(safetyTimer)
+
+      if (session?.user) {
         await fetchUserProfile(session.user.id)
       } else {
-        // No session — user is signed out or never signed in
         setUser(null)
         setSellerProfile(null)
         setProfileFetchError(null)
@@ -127,6 +141,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
 
     return () => {
+      cancelled = true
       subscription.unsubscribe()
       clearTimeout(safetyTimer)
     }
