@@ -173,8 +173,11 @@ export default function SellerApplications() {
           Pending Review
           <Badge variant="secondary" className="ml-2">{pendingApps.length}</Badge>
           {refreshing && (
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary ml-2" />
+            <div className="h-4 w-4 ml-2">
+              <div className="h-4 w-4 bg-primary/20 rounded-full animate-pulse" />
+            </div>
           )}
+
         </h2>
 
         {pendingApps.length === 0 ? (
