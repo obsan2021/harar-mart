@@ -112,12 +112,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
-        // On INITIAL session (from getSession), the checkUser already handles it.
-        // Only fetch on actual auth events (SIGNED_IN, TOKEN_REFRESHED, USER_UPDATED)
-        if (event !== 'INITIAL_SESSION') {
-          await fetchUserProfile(session.user.id)
-        }
-      } else {
+        // Always fetch the user profile on any auth event, including INITIAL_SESSION.
+        // Previously we skipped INITIAL_SESSION because checkUser() above already
+        // calls getSession(), but this created a race condition where the listener
+        // could fire before checkUser() completes, leaving the user null on refresh.
+        // Now we always fetch — the fetchUserProfile function is idempotent and
+        // handles the case where the profile already exists.
+        await fetchUserProfile(session.user.id)
+      } else if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
         setUser(null)
         setSellerProfile(null)
         setProfileFetchError(null)
