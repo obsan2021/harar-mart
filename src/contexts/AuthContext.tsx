@@ -119,7 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Now we always fetch — the fetchUserProfile function is idempotent and
         // handles the case where the profile already exists.
         await fetchUserProfile(session.user.id)
-      } else if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+      } else if (event === 'SIGNED_OUT') {
         setUser(null)
         setSellerProfile(null)
         setProfileFetchError(null)

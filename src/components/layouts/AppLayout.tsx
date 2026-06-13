@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useCart } from '@/contexts/CartContext'
 import { 
   ShoppingCart, User, LogOut, Menu, X, Search, 
-  MessageSquare, Globe, ChevronDown, Package
+  MessageSquare, Globe, ChevronDown, Package, LayoutDashboard
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -23,7 +23,7 @@ import { MegaMenu } from '@/components/marketplace'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 export default function AppLayout() {
-  const { user, signOut } = useAuth()
+  const { user, signOut, isAdmin } = useAuth()
   const { cartCount } = useCart()
   const navigate = useNavigate()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -134,6 +134,15 @@ export default function AppLayout() {
                         <Package className="h-4 w-4 mr-2" />
                         My Orders
                       </DropdownMenuItem>
+                      {isAdmin && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => navigate('/admin/dashboard')}>
+                            <LayoutDashboard className="h-4 w-4 mr-2" />
+                            Admin Panel
+                          </DropdownMenuItem>
+                        </>
+                      )}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={signOut}>
                         <LogOut className="h-4 w-4 mr-2" />
@@ -233,6 +242,11 @@ export default function AppLayout() {
                 Support
               </Link>
               <div className="border-t border-border my-2 pt-2">
+                {isAdmin && (
+                  <Link to="/admin/dashboard" className="px-3 py-2.5 text-sm font-medium text-primary rounded-md hover:bg-primary/5 block" onClick={() => setMobileMenuOpen(false)}>
+                    Admin Panel
+                  </Link>
+                )}
                 <Link to="/become-a-seller" className="px-3 py-2.5 text-sm font-medium text-primary rounded-md hover:bg-primary/5 block" onClick={() => setMobileMenuOpen(false)}>
                   Sell on Harar Mart
                 </Link>

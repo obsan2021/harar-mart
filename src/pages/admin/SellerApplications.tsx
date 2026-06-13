@@ -53,7 +53,7 @@ export default function SellerApplications() {
     setLoading(true)
     const { data, error } = await supabase
       .from('seller_applications')
-      .select('*, users!inner(email, full_name)')
+      .select('*, users(email, full_name)')
       .order('created_at', { ascending: false })
 
     if (error) {
