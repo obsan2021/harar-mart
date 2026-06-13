@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { formatPrice } from '@/lib/utils'
 import { Plus, Edit, Trash2 } from 'lucide-react'
+import { ListPageSkeleton } from '@/components/admin/AdminSkeletons'
 
 export default function Products() {
   const [products, setProducts] = useState<Product[]>([])
@@ -27,11 +28,7 @@ export default function Products() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    )
+    return <ListPageSkeleton rows={5} />
   }
 
   return (

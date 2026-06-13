@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
 import { CheckCircle, Building2, Search, Filter } from 'lucide-react'
 import { getCountryFlag } from '@/lib/utils'
+import { ShopSkeleton } from '@/components/app/AppSkeletons'
 
 export default function Shop() {
   const [products, setProducts] = useState<Product[]>([])
@@ -87,11 +88,7 @@ export default function Shop() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    )
+    return <ShopSkeleton />
   }
 
   return (

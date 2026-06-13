@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { formatDate, getStatusColor, formatPrice } from '@/lib/utils'
 import { Package } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client'
+import { OrdersListSkeleton } from '@/components/app/AppSkeletons'
 
 export default function Orders() {
   const { user } = useAuth()
@@ -35,11 +36,7 @@ export default function Orders() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    )
+    return <OrdersListSkeleton />
   }
 
   if (orders.length === 0) {

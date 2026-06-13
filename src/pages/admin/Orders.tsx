@@ -4,6 +4,7 @@ import type { Order } from '@/integrations/supabase/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { formatPrice, formatDate, getStatusColor } from '@/lib/utils'
+import { OrdersSkeleton } from '@/components/admin/AdminSkeletons'
 
 export default function Orders() {
   const [orders, setOrders] = useState<Order[]>([])
@@ -27,11 +28,7 @@ export default function Orders() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[600px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    )
+    return <OrdersSkeleton />
   }
 
   return (

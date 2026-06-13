@@ -8,6 +8,7 @@ import { formatDate, formatPrice, getStatusColor } from '@/lib/utils'
 import { Package, ArrowLeft, Calendar, MapPin, Phone } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client'
 import type { Order } from '@/integrations/supabase/types'
+import { OrderDetailSkeleton } from '@/components/app/AppSkeletons'
 
 export default function OrderDetail() {
   const { id } = useParams<{ id: string }>()
@@ -50,11 +51,7 @@ export default function OrderDetail() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    )
+    return <OrderDetailSkeleton />
   }
 
   if (!order) {

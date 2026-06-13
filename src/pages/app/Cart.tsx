@@ -7,17 +7,14 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Input } from '@/components/ui/input'
 import { formatPrice, DELIVERY_FEE } from '@/lib/utils'
 import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react'
+import { CartSkeleton } from '@/components/app/AppSkeletons'
 
 export default function Cart() {
   const { cartItems, loading, updateQuantity, removeFromCart, cartTotal } = useCart()
   const { user } = useAuth()
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    )
+    return <CartSkeleton />
   }
 
   if (cartItems.length === 0) {

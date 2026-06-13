@@ -4,6 +4,7 @@ import type { User } from '@/integrations/supabase/types'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { SimpleListSkeleton } from '@/components/admin/AdminSkeletons'
 
 export default function Users() {
   const [users, setUsers] = useState<User[]>([])
@@ -26,11 +27,7 @@ export default function Users() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    )
+    return <SimpleListSkeleton rows={5} />
   }
 
   return (

@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label'
 import { CheckCircle, Building2, Package, Clock, Shield, Send } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/hooks/use-toast'
+import { ProductDetailSkeleton } from '@/components/app/AppSkeletons'
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>()
@@ -88,11 +89,7 @@ export default function ProductDetail() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    )
+    return <ProductDetailSkeleton />
   }
 
   if (!product) {

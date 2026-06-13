@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatPrice } from '@/lib/utils'
 import { Package, ShoppingCart, Users, TrendingUp } from 'lucide-react'
+import { DashboardSkeleton } from '@/components/admin/AdminSkeletons'
 
 export default function Dashboard() {
   const [stats, setStats] = useState({
@@ -34,11 +35,7 @@ export default function Dashboard() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    )
+    return <DashboardSkeleton />
   }
 
   return (

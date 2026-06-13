@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Building2, CheckCircle, XCircle, Shield, MapPin, Calendar } from 'lucide-react'
+import { SellersSkeleton } from '@/components/admin/AdminSkeletons'
 
 export default function AdminSellers() {
   const [sellers, setSellers] = useState<SellerProfile[]>([])
@@ -59,11 +60,7 @@ export default function AdminSellers() {
   const verifiedSellers = sellers.filter(s => s.is_verified)
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    )
+    return <SellersSkeleton />
   }
 
   return (
