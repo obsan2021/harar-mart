@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Dialog,
   DialogContent,
@@ -39,18 +40,23 @@ interface Application {
 
 export default function SellerApplications() {
   const [applications, setApplications] = useState<Application[]>([])
-  const [loading, setLoading] = useState(true)
+  const [initialLoading, setInitialLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [selectedApp, setSelectedApp] = useState<Application | null>(null)
   const [rejectReason, setRejectReason] = useState('')
   const [processing, setProcessing] = useState(false)
   const [showRejectDialog, setShowRejectDialog] = useState(false)
 
   useEffect(() => {
-    fetchApplications()
+    fetchApplications(true)
   }, [])
 
-  async function fetchApplications() {
-    setLoading(true)
+  async function fetchApplications(isInitial = false) {
+    if (isInitial) {
+      setInitialLoading(true)
+    } else {
+      setRefreshing(true)
+    }
     const { data, error } = await supabase
       .from('seller_applications')
       .select('*, users(email, full_name)')
@@ -61,7 +67,11 @@ export default function SellerApplications() {
     } else if (data) {
       setApplications(data as unknown as Application[])
     }
-    setLoading(false)
+    if (isInitial) {
+      setInitialLoading(false)
+    } else {
+      setRefreshing(false)
+    }
   }
 
   async function handleApprove(app: Application) {
@@ -105,10 +115,44 @@ export default function SellerApplications() {
   const pendingApps = applications.filter(a => a.status === 'pending')
   const reviewedApps = applications.filter(a => a.status !== 'pending')
 
-  if (loading) {
+  if (initialLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="space-y-8">
+        <div>
+          <Skeleton className="h-9 w-64" />
+          <Skeleton className="h-5 w-48 mt-2" />
+        </div>
+
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <Skeleton className="h-6 w-6 rounded-full" />
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-5 w-8 rounded-full" />
+          </div>
+          <div className="grid gap-4">
+            {[1, 2, 3].map((i) => (
+              <Card key={i}>
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-3">
+                      <Skeleton className="h-5 w-5 rounded" />
+                      <div className="space-y-2">
+                        <Skeleton className="h-5 w-48" />
+                        <Skeleton className="h-4 w-36" />
+                      </div>
+                    </div>
+                    <Skeleton className="h-5 w-24 rounded-full" />
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-3 w-28 mt-2" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
       </div>
     )
   }
@@ -128,6 +172,9 @@ export default function SellerApplications() {
           <Clock className="h-5 w-5 text-yellow-500" />
           Pending Review
           <Badge variant="secondary" className="ml-2">{pendingApps.length}</Badge>
+          {refreshing && (
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary ml-2" />
+          )}
         </h2>
 
         {pendingApps.length === 0 ? (
