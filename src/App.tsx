@@ -183,7 +183,7 @@ function App() {
 
               {/* Seller Routes */}
               <Route path="/seller" element={<SellerLayout />}>
-                <Route element={<ProtectedRoute />}>
+                <Route element={<ProtectedRoute requireSeller />}>
                   <Route index element={<Navigate to="/seller/products" replace />} />
                   <Route path="products" element={<SellerProducts />} />
                   <Route path="inquiries" element={<SellerInquiries />} />

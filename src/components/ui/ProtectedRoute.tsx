@@ -5,10 +5,11 @@ import { Skeleton } from '@/components/ui/skeleton'
 
 interface ProtectedRouteProps {
   requireAdmin?: boolean
+  requireSeller?: boolean
 }
 
-export default function ProtectedRoute({ requireAdmin = false }: ProtectedRouteProps) {
-  const { user, loading, isAdmin } = useAuth()
+export default function ProtectedRoute({ requireAdmin = false, requireSeller = false }: ProtectedRouteProps) {
+  const { user, loading, isAdmin, isSeller } = useAuth()
   const location = useLocation()
 
   if (loading) {
@@ -35,6 +36,10 @@ export default function ProtectedRoute({ requireAdmin = false }: ProtectedRouteP
   }
 
   if (requireAdmin && !isAdmin) {
+    return <Navigate to="/" replace />
+  }
+
+  if (requireSeller && !isSeller) {
     return <Navigate to="/" replace />
   }
 
