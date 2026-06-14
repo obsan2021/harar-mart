@@ -30,20 +30,11 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Sample product data for the recommendation grid
-  const [sampleProducts] = useState<ProductCardData[]>([
-    { id: '1', title: 'Premium Wireless Bluetooth Earbuds with Noise Cancellation', priceMin: 5.00, priceMax: 12.50, moq: 100, supplierName: 'TechGadget Co.', supplierYears: 8, supplierCountry: 'China', rating: 4.8, reviewCount: 2340, isVerified: true },
-    { id: '2', title: 'High Efficiency Monocrystalline Solar Panel 400W', priceMin: 89.00, priceMax: 145.00, moq: 50, supplierName: 'GreenEnergy Ltd', supplierYears: 12, supplierCountry: 'China', rating: 4.9, reviewCount: 1567, isVerified: true },
-    { id: '3', title: 'Smart Watch Fitness Tracker with Heart Rate Monitor', priceMin: 15.80, priceMax: 35.00, moq: 200, supplierName: 'WearableTech Inc', supplierYears: 5, supplierCountry: 'Shenzhen', rating: 4.6, reviewCount: 3890, isVerified: true },
-    { id: '4', title: 'LED Strip Lights RGB Waterproof 5M with Remote', priceMin: 3.20, priceMax: 8.90, moq: 500, supplierName: 'LightingPro', supplierYears: 6, supplierCountry: 'China', rating: 4.7, reviewCount: 5678 },
-    { id: '5', title: 'Eco-Friendly Bamboo Toothbrush Set of 10', priceMin: 1.50, priceMax: 3.80, moq: 1000, supplierName: 'EcoLiving Supplies', supplierYears: 4, supplierCountry: 'Vietnam', rating: 4.5, reviewCount: 1234, isVerified: true },
-    { id: '6', title: 'Portable Bluetooth Speaker Waterproof IPX7', priceMin: 8.50, priceMax: 22.00, moq: 150, supplierName: 'AudioWave Tech', supplierYears: 7, supplierCountry: 'China', rating: 4.6, reviewCount: 2890 },
-    { id: '7', title: 'Organic Arabica Coffee Beans 1kg Premium Grade', priceMin: 6.00, priceMax: 14.00, moq: 200, supplierName: 'BeanMaster Co.', supplierYears: 15, supplierCountry: 'Ethiopia', rating: 4.9, reviewCount: 3456, isVerified: true },
-    { id: '8', title: 'Stainless Steel Water Bottle 750ml Insulated', priceMin: 4.50, priceMax: 9.80, moq: 300, supplierName: 'HydroGear', supplierYears: 9, supplierCountry: 'China', rating: 4.7, reviewCount: 4567 },
-  ])
+  // Real product data fetched from the database for the recommendation grid
+  const [sampleProducts, setSampleProducts] = useState<ProductCardData[]>([])
 
   useEffect(() => {
-    Promise.all([fetchCategories(), fetchVerifiedSellers()])
+    Promise.all([fetchCategories(), fetchVerifiedSellers(), fetchSampleProducts()])
       .then(() => setLoading(false))
       .catch((err) => {
         console.error('Home: Data fetch error:', err)
@@ -77,6 +68,37 @@ export default function Home() {
       if (error) console.error('Error fetching sellers:', error)
     } catch (e) {
       console.error('Error fetching sellers:', e)
+    }
+  }
+
+  async function fetchSampleProducts() {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*, seller:seller_profiles(company_name, is_verified, users(country))')
+        .eq('is_available', true)
+        .order('created_at', { ascending: false })
+        .limit(8)
+
+      if (error) {
+        console.error('Error fetching sample products:', error)
+        return
+      }
+
+      if (data) {
+        setSampleProducts(data.map((p: any) => ({
+          id: p.id,
+          title: p.name,
+          priceMin: p.min_price,
+          priceMax: p.max_price,
+          moq: p.moq,
+          supplierName: p.seller?.company_name ?? 'Unknown',
+          supplierCountry: p.seller?.users?.country ?? '',
+          isVerified: p.seller?.is_verified ?? false,
+        })))
+      }
+    } catch (e) {
+      console.error('Error fetching sample products:', e)
     }
   }
 
