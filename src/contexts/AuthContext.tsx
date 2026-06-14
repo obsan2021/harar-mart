@@ -38,53 +38,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let cancelled = false
-    let sessionInitialized = false
 
-    // Safety timeout: ensure loading resolves within 8 seconds no matter what
     const safetyTimer = setTimeout(() => {
       if (!cancelled) setLoading(false)
     }, 8000)
 
-    const handleSession = async (session: any) => {
-      if (cancelled) return
+    // Single source of truth: onAuthStateChange handles EVERYTHING.
+    // It fires INITIAL_SESSION on mount with the persisted session (if any),
+    // then fires subsequent events (SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED).
+    // We do NOT call getSession() separately — that's what causes the race.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (cancelled) return
+        clearTimeout(safetyTimer)
 
-      if (session?.user) {
-        sessionInitialized = true
-        await fetchUserProfile(session.user.id)
-      } else if (!sessionInitialized) {
-        setUser(null)
-        setSellerProfile(null)
-        setProfileFetchError(null)
-        setLoading(false)
+        if (session?.user) {
+          await fetchUserProfile(session.user.id)
+        } else {
+          setUser(null)
+          setSellerProfile(null)
+          setProfileFetchError(null)
+          setLoading(false)
+        }
       }
-    }
-
-    // Step 1: Explicitly check for an existing session on mount.
-    // onAuthStateChange's INITIAL_SESSION event can be missed if React
-    // hasn't committed the effect yet, so we call getSession() to be safe.
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (cancelled) return
-      clearTimeout(safetyTimer)
-      handleSession(session)
-    })
-
-    // Step 2: Subscribe to subsequent auth state changes (login, logout,
-    // token refresh). This handles events that happen AFTER mount.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      clearTimeout(safetyTimer)
-      if (cancelled) return
-
-      if (event === 'INITIAL_SESSION' && !session?.user) {
-        return
-      }
-
-      await handleSession(session)
-    })
+    )
 
     return () => {
       cancelled = true
-      subscription.unsubscribe()
       clearTimeout(safetyTimer)
+      subscription.unsubscribe()
     }
   }, [])
 
