@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/integrations/supabase/client'
 import type { HouseRental } from '@/integrations/supabase/types'
 import { useAuth } from '@/contexts/AuthContext'
@@ -9,6 +10,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
+import { Slider } from '@/components/ui/slider'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
   DialogContent,
@@ -23,7 +26,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Checkbox } from '@/components/ui/checkbox'
 import {
   Home,
   Plus,
@@ -57,6 +59,7 @@ const AMENITIES_LIST = [
 const DEFAULT_IMAGE = '/placeholder.svg'
 
 export default function HouseRentals() {
+  const navigate = useNavigate()
   const { user } = useAuth()
   const [rentals, setRentals] = useState<HouseRental[]>([])
   const [loading, setLoading] = useState(true)
@@ -66,13 +69,11 @@ export default function HouseRentals() {
 
   // Search & Filters
   const [searchQuery, setSearchQuery] = useState('')
-  const [minPrice, setMinPrice] = useState('')
-  const [maxPrice, setMaxPrice] = useState('')
+  const [listingType, setListingType] = useState<string | null>(null)
+  const [minPrice, setMinPrice] = useState(0)
+  const [maxPrice, setMaxPrice] = useState(50000)
   const [bedrooms, setBedrooms] = useState<string>('any')
-  const [bathrooms, setBathrooms] = useState<string>('any')
-  const [statusFilter, setStatusFilter] = useState<string>('any')
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([])
-  const [locationFilter, setLocationFilter] = useState<string>('any')
 
   // Form state
   const [formData, setFormData] = useState({
@@ -86,6 +87,10 @@ export default function HouseRentals() {
     address: '',
     images: [] as string[],
     amenities: [] as string[],
+    contact_name: '',
+    contact_phone: '',
+    contact_type: 'owner' as 'owner' | 'broker' | 'agent',
+    listing_type: 'rent' as 'rent' | 'sale',
   })
 
   useEffect(() => {
@@ -104,9 +109,6 @@ export default function HouseRentals() {
     setLoading(false)
   }
 
-  // Unique locations extracted from data for the location filter dropdown
-  const uniqueLocations = [...new Set(rentals.map((r) => r.location))].sort()
-
   // Filtered rentals
   const filteredRentals = rentals.filter((rental) => {
     // Search query
@@ -121,9 +123,11 @@ export default function HouseRentals() {
       }
     }
 
+    // Listing type
+    if (listingType && rental.listing_type !== listingType) return false
+
     // Price range
-    if (minPrice && rental.price < parseFloat(minPrice)) return false
-    if (maxPrice && rental.price > parseFloat(maxPrice)) return false
+    if (rental.price < minPrice || rental.price > maxPrice) return false
 
     // Bedrooms
     if (bedrooms !== 'any') {
@@ -134,22 +138,6 @@ export default function HouseRentals() {
         if (rental.bedrooms !== bedCount) return false
       }
     }
-
-    // Bathrooms
-    if (bathrooms !== 'any') {
-      const bathCount = parseInt(bathrooms)
-      if (bathrooms === '3') {
-        if (rental.bathrooms < 3) return false
-      } else {
-        if (rental.bathrooms !== bathCount) return false
-      }
-    }
-
-    // Status
-    if (statusFilter !== 'any' && rental.status !== statusFilter) return false
-
-    // Location
-    if (locationFilter !== 'any' && rental.location !== locationFilter) return false
 
     // Amenities
     if (selectedAmenities.length > 0) {
@@ -173,6 +161,10 @@ export default function HouseRentals() {
       address: '',
       images: [],
       amenities: [],
+      contact_name: '',
+      contact_phone: '',
+      contact_type: 'owner',
+      listing_type: 'rent',
     })
   }
 
@@ -189,6 +181,10 @@ export default function HouseRentals() {
       address: rental.address || '',
       images: rental.images,
       amenities: rental.amenities,
+      contact_name: rental.contact_name || '',
+      contact_phone: rental.contact_phone || '',
+      contact_type: rental.contact_type || 'owner',
+      listing_type: rental.listing_type || 'rent',
     })
     setIsDialogOpen(true)
   }
@@ -211,6 +207,10 @@ export default function HouseRentals() {
       address: formData.address || null,
       images: formData.images,
       amenities: formData.amenities,
+      contact_name: formData.contact_name || null,
+      contact_phone: formData.contact_phone || null,
+      contact_type: formData.contact_type,
+      listing_type: formData.listing_type,
     }
 
     if (editingRental) {
@@ -314,6 +314,23 @@ export default function HouseRentals() {
                     </DialogTitle>
                   </DialogHeader>
                   <form onSubmit={handleSubmit} className="space-y-4">
+                    {/* Listing Type */}
+                    <div className="space-y-2">
+                      <Label>Listing Type *</Label>
+                      <Select
+                        value={formData.listing_type}
+                        onValueChange={(v) => setFormData({ ...formData, listing_type: v as 'rent' | 'sale' })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="rent">For Rent</SelectItem>
+                          <SelectItem value="sale">For Sale</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
                     <div className="space-y-2">
                       <Label htmlFor="title">Title *</Label>
                       <Input
@@ -339,7 +356,9 @@ export default function HouseRentals() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="price">Monthly Rent ($) *</Label>
+                        <Label htmlFor="price">
+                          {formData.listing_type === 'sale' ? 'Sale Price (ETB) *' : 'Monthly Rent (ETB) *'}
+                        </Label>
                         <Input
                           id="price"
                           type="number"
@@ -484,6 +503,45 @@ export default function HouseRentals() {
                       </div>
                     </div>
 
+                    {/* Contact Information */}
+                    <div className="space-y-3">
+                      <Label className="text-base font-semibold">Contact Information</Label>
+                      <div className="space-y-2">
+                        <Label>Contact Type</Label>
+                        <Select
+                          value={formData.contact_type}
+                          onValueChange={(v) => setFormData({ ...formData, contact_type: v as 'owner' | 'broker' | 'agent' })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="owner">Owner</SelectItem>
+                            <SelectItem value="broker">Broker</SelectItem>
+                            <SelectItem value="agent">Agent</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="contact_name">Contact Name</Label>
+                        <Input
+                          id="contact_name"
+                          value={formData.contact_name}
+                          onChange={(e) => setFormData({ ...formData, contact_name: e.target.value })}
+                          placeholder="Name shown to interested buyers"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="contact_phone">Contact Phone</Label>
+                        <Input
+                          id="contact_phone"
+                          value={formData.contact_phone}
+                          onChange={(e) => setFormData({ ...formData, contact_phone: e.target.value })}
+                          placeholder="+251 9XX XXX XXX"
+                        />
+                      </div>
+                    </div>
+
                     <div className="flex gap-2 justify-end pt-4">
                       <Button
                         type="button"
@@ -506,9 +564,9 @@ export default function HouseRentals() {
           </div>
 
           {/* Search Bar */}
-          <div className="flex gap-2 max-w-2xl">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
                 type="search"
                 placeholder="Search by title, location, or description..."
@@ -518,256 +576,261 @@ export default function HouseRentals() {
               />
             </div>
             <Button
-              variant={showFilters ? 'default' : 'outline'}
-              size="lg"
+              variant="outline"
               onClick={() => setShowFilters(!showFilters)}
+              className="md:hidden"
             >
-              <Filter className="h-5 w-5 mr-2" />
+              <Filter className="h-4 w-4 mr-2" />
               Filters
             </Button>
           </div>
-
-          {/* Filter Panel */}
-          {showFilters && (
-            <Card className="mt-4">
-              <CardContent className="p-6">
-                <div className="grid md:grid-cols-4 gap-6">
-                  {/* Price Range */}
-                  <div className="space-y-2">
-                    <Label>Price Range</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        type="number"
-                        placeholder="Min"
-                        value={minPrice}
-                        onChange={(e) => setMinPrice(e.target.value)}
-                      />
-                      <Input
-                        type="number"
-                        placeholder="Max"
-                        value={maxPrice}
-                        onChange={(e) => setMaxPrice(e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Bedrooms */}
-                  <div className="space-y-2">
-                    <Label>Bedrooms</Label>
-                    <Select value={bedrooms} onValueChange={setBedrooms}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="any">Any</SelectItem>
-                        <SelectItem value="1">1 Bedroom</SelectItem>
-                        <SelectItem value="2">2 Bedrooms</SelectItem>
-                        <SelectItem value="3">3 Bedrooms</SelectItem>
-                        <SelectItem value="4">4+ Bedrooms</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Bathrooms */}
-                  <div className="space-y-2">
-                    <Label>Bathrooms</Label>
-                    <Select value={bathrooms} onValueChange={setBathrooms}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="any">Any</SelectItem>
-                        <SelectItem value="1">1 Bathroom</SelectItem>
-                        <SelectItem value="2">2 Bathrooms</SelectItem>
-                        <SelectItem value="3">3+ Bathrooms</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Status */}
-                  <div className="space-y-2">
-                    <Label>Status</Label>
-                    <Select value={statusFilter} onValueChange={setStatusFilter}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="any">Any</SelectItem>
-                        <SelectItem value="available">Available</SelectItem>
-                        <SelectItem value="rented">Rented</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Location */}
-                  <div className="space-y-2">
-                    <Label>Location</Label>
-                    <Select value={locationFilter} onValueChange={setLocationFilter}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Any location" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="any">Any location</SelectItem>
-                        {uniqueLocations.map((loc) => (
-                          <SelectItem key={loc} value={loc}>{loc}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Amenities */}
-                  <div className="space-y-2 md:col-span-3">
-                    <Label>Amenities</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {AMENITIES_LIST.map((amenity) => (
-                        <Badge
-                          key={amenity}
-                          variant={selectedAmenities.includes(amenity) ? 'default' : 'outline'}
-                          className="cursor-pointer"
-                          onClick={() => toggleFilterAmenity(amenity)}
-                        >
-                          {amenity}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
         </div>
       </section>
 
-      {/* Results */}
+      {/* Main Content: Sidebar + Grid */}
       <section className="container mx-auto px-4 py-8">
-        {filteredRentals.length === 0 ? (
-          <div className="text-center py-16">
-            <Home className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No listings found</h3>
-            <p className="text-muted-foreground mb-6">
-              {searchQuery || minPrice || maxPrice || bedrooms !== 'any' || bathrooms !== 'any' || statusFilter !== 'any' || locationFilter !== 'any' || selectedAmenities.length > 0
-                ? 'Try adjusting your filters'
-                : 'Be the first to list a property!'}
-            </p>
-            {user && !searchQuery && !minPrice && bedrooms === 'any' && (
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button onClick={() => resetForm()}>
-                    <Plus className="h-5 w-5 mr-2" />
-                    Add Your First Listing
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>Add New Listing</DialogTitle>
-                  </DialogHeader>
-                  {/* Same form as above — reuse the dialog content */}
-                  <p className="text-muted-foreground">
-                    Use the "Add Listing" button in the header to create your first listing.
-                  </p>
-                </DialogContent>
-              </Dialog>
+        <div className="flex flex-col md:flex-row gap-8">
+          {/* Filters Sidebar */}
+          <aside className={`md:w-64 ${showFilters ? 'block' : 'hidden md:block'}`}>
+            <div className="space-y-6 sticky top-4">
+              {/* Listing Type */}
+              <div>
+                <h3 className="font-semibold mb-3">Listing Type</h3>
+                <div className="space-y-2">
+                  {[null, 'rent', 'sale'].map((type) => (
+                    <Button
+                      key={type ?? 'all'}
+                      variant={listingType === type ? 'default' : 'ghost'}
+                      className="w-full justify-start"
+                      onClick={() => setListingType(type)}
+                    >
+                      {type === null ? 'All Listings' : type === 'rent' ? 'For Rent' : 'For Sale'}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Price Range */}
+              <div>
+                <h3 className="font-semibold mb-3">Price Range (ETB)</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span>Min: {minPrice.toLocaleString()}</span>
+                    <span>Max: {maxPrice.toLocaleString()}</span>
+                  </div>
+                  <Slider
+                    value={[minPrice, maxPrice]}
+                    onValueChange={(value) => { setMinPrice(value[0]); setMaxPrice(value[1]) }}
+                    min={0}
+                    max={50000}
+                    step={500}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+
+              {/* Bedrooms */}
+              <div>
+                <h3 className="font-semibold mb-3">Bedrooms</h3>
+                <div className="space-y-2">
+                  {[
+                    { value: 'any', label: 'Any' },
+                    { value: '1', label: '1 Bedroom' },
+                    { value: '2', label: '2 Bedrooms' },
+                    { value: '3', label: '3 Bedrooms' },
+                    { value: '4', label: '4+ Bedrooms' },
+                  ].map(({ value, label }) => (
+                    <Button
+                      key={value}
+                      variant={bedrooms === value ? 'default' : 'ghost'}
+                      className="w-full justify-start"
+                      onClick={() => setBedrooms(value)}
+                    >
+                      {label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Amenities */}
+              <div>
+                <h3 className="font-semibold mb-3">Amenities</h3>
+                <div className="space-y-2">
+                  {AMENITIES_LIST.map((amenity) => (
+                    <div key={amenity} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`filter-${amenity}`}
+                        checked={selectedAmenities.includes(amenity)}
+                        onCheckedChange={() => toggleFilterAmenity(amenity)}
+                      />
+                      <Label htmlFor={`filter-${amenity}`} className="text-sm cursor-pointer">
+                        {amenity}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Clear All Filters */}
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  setListingType(null)
+                  setMinPrice(0)
+                  setMaxPrice(50000)
+                  setBedrooms('any')
+                  setSelectedAmenities([])
+                }}
+              >
+                Clear All Filters
+              </Button>
+            </div>
+          </aside>
+
+          {/* Results Grid */}
+          <div className="flex-1">
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                {filteredRentals.length} listings found
+              </p>
+            </div>
+
+            {filteredRentals.length === 0 ? (
+              <div className="text-center py-16">
+                <Home className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-xl font-semibold mb-2">No listings found</h3>
+                <p className="text-muted-foreground mb-6">
+                  {searchQuery || listingType || minPrice > 0 || maxPrice < 50000 || bedrooms !== 'any' || selectedAmenities.length > 0
+                    ? 'Try adjusting your filters'
+                    : 'Be the first to list a property!'}
+                </p>
+                {user && !searchQuery && !listingType && minPrice === 0 && maxPrice === 50000 && bedrooms === 'any' && (
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button onClick={() => resetForm()}>
+                        <Plus className="h-5 w-5 mr-2" />
+                        Add Your First Listing
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Add New Listing</DialogTitle>
+                      </DialogHeader>
+                      <p className="text-muted-foreground">
+                        Use the "Add Listing" button in the header to create your first listing.
+                      </p>
+                    </DialogContent>
+                  </Dialog>
+                )}
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredRentals.map((rental) => (
+                  <Card
+                    key={rental.id}
+                    className="overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer"
+                    onClick={() => navigate(`/rentals/${rental.id}`)}
+                  >
+                    {/* Image */}
+                    <div className="aspect-video bg-muted relative overflow-hidden">
+                      {rental.images && rental.images.length > 0 ? (
+                        <img
+                          src={rental.images[0]}
+                          alt={rental.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = DEFAULT_IMAGE
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                          <ImageIcon className="h-12 w-12" />
+                        </div>
+                      )}
+                      {rental.images && rental.images.length > 1 && (
+                        <div className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+                          {rental.images.length} photos
+                        </div>
+                      )}
+                      <Badge className="absolute top-2 left-2" variant="secondary">
+                        {rental.listing_type === 'sale'
+                          ? `ETB ${rental.price.toLocaleString()}`
+                          : `ETB ${rental.price.toLocaleString()}/mo`}
+                      </Badge>
+                    </div>
+
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <h3 className="font-semibold text-lg line-clamp-1">{rental.title}</h3>
+                        {user && user.id === rental.user_id && (
+                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => handleEdit(rental)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive"
+                              onClick={() => handleDelete(rental.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-1 text-sm text-muted-foreground mb-3">
+                        <MapPin className="h-4 w-4" />
+                        <span>{rental.location}</span>
+                      </div>
+
+                      <div className="flex items-center gap-4 text-sm mb-3">
+                        <span className="flex items-center gap-1">
+                          <Bed className="h-4 w-4" />
+                          {rental.bedrooms} bed
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Bath className="h-4 w-4" />
+                          {rental.bathrooms} bath
+                        </span>
+                        {rental.square_feet && (
+                          <span className="text-muted-foreground">
+                            {rental.square_feet.toLocaleString()} sqft
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                        {rental.description}
+                      </p>
+
+                      {rental.amenities.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {rental.amenities.slice(0, 4).map((amenity) => (
+                            <Badge key={amenity} variant="outline" className="text-xs">
+                              {amenity}
+                            </Badge>
+                          ))}
+                          {rental.amenities.length > 4 && (
+                            <Badge variant="outline" className="text-xs">
+                              +{rental.amenities.length - 4} more
+                            </Badge>
+                          )}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             )}
           </div>
-        ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredRentals.map((rental) => (
-              <Card key={rental.id} className="overflow-hidden hover:shadow-lg transition-shadow group">
-                {/* Image */}
-                <div className="aspect-video bg-muted relative overflow-hidden">
-                  {rental.images && rental.images.length > 0 ? (
-                    <img
-                      src={rental.images[0]}
-                      alt={rental.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = DEFAULT_IMAGE
-                      }}
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                      <ImageIcon className="h-12 w-12" />
-                    </div>
-                  )}
-                  {rental.images && rental.images.length > 1 && (
-                    <div className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
-                      {rental.images.length} photos
-                    </div>
-                  )}
-                  <Badge className="absolute top-2 left-2" variant="secondary">
-                    ${rental.price.toLocaleString()}/mo
-                  </Badge>
-                </div>
-
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-semibold text-lg line-clamp-1">{rental.title}</h3>
-                    {user && user.id === rental.user_id && (
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => handleEdit(rental)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-destructive"
-                          onClick={() => handleDelete(rental.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-1 text-sm text-muted-foreground mb-3">
-                    <MapPin className="h-4 w-4" />
-                    <span>{rental.location}</span>
-                  </div>
-
-                  <div className="flex items-center gap-4 text-sm mb-3">
-                    <span className="flex items-center gap-1">
-                      <Bed className="h-4 w-4" />
-                      {rental.bedrooms} bed
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Bath className="h-4 w-4" />
-                      {rental.bathrooms} bath
-                    </span>
-                    {rental.square_feet && (
-                      <span className="text-muted-foreground">
-                        {rental.square_feet.toLocaleString()} sqft
-                      </span>
-                    )}
-                  </div>
-
-                  <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                    {rental.description}
-                  </p>
-
-                  {rental.amenities.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {rental.amenities.slice(0, 4).map((amenity) => (
-                        <Badge key={amenity} variant="outline" className="text-xs">
-                          {amenity}
-                        </Badge>
-                      ))}
-                      {rental.amenities.length > 4 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{rental.amenities.length - 4} more
-                        </Badge>
-                      )}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+        </div>
       </section>
     </div>
   )

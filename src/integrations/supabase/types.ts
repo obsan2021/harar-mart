@@ -126,6 +126,19 @@ export interface DeliveryAgent {
   user?: User
 }
 
+export interface HouseRentalReview {
+  id: string
+  rental_id: string
+  user_id: string
+  rating: number
+  comment: string
+  created_at: string
+  user?: {
+    full_name: string
+    avatar_url?: string
+  }
+}
+
 export interface HouseRental {
   id: string
   user_id: string
@@ -140,7 +153,12 @@ export interface HouseRental {
   images: string[]
   amenities: string[]
   status: 'available' | 'rented'
+  listing_type: 'rent' | 'sale'
+  contact_name?: string
+  contact_phone?: string
+  contact_type?: 'owner' | 'broker' | 'agent'
   created_at: string
   updated_at: string
   user?: User
+  reviews?: HouseRentalReview[]
 }
