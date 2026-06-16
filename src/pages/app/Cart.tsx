@@ -46,10 +46,10 @@ export default function Cart() {
               <CardContent className="p-4">
                 <div className="flex gap-4">
                   <div className="w-24 h-24 bg-muted rounded-md flex items-center justify-center flex-shrink-0">
-                    {item.product.images?.[0] ? (
+                    {item.product?.images?.[0] ? (
                       <img
-                        src={item.product.images[0]}
-                        alt={item.product.name}
+                        src={item.product?.images?.[0] ?? ''}
+                        alt={item.product?.name ?? ''}
                         className="w-full h-full object-cover rounded-md"
                       />
                     ) : (
@@ -57,9 +57,9 @@ export default function Cart() {
                     )}
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold mb-1">{item.product.name}</h3>
+                    <h3 className="font-semibold mb-1">{item.product?.name}</h3>
                     <p className="text-sm text-muted-foreground mb-2">
-                      {formatPrice(item.product.min_price)}
+                      {formatPrice(item.product?.min_price ?? 0)}
                     </p>
                     <div className="flex items-center gap-2">
                       <Button

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/integrations/supabase/client'
-import type { Product, Category } from '@/integrations/supabase/types'
+import type { ProductWithRelations, Category } from '@/integrations/supabase/types'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -15,11 +15,11 @@ import { useAuth } from '@/contexts/AuthContext'
 import { SellerProductsSkeleton } from '@/components/app/AppSkeletons'
 
 export default function SellerProducts() {
-  const [products, setProducts] = useState<Product[]>([])
+  const [products, setProducts] = useState<ProductWithRelations[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [editingProduct, setEditingProduct] = useState<ProductWithRelations | null>(null)
   const { sellerProfile, isSeller } = useAuth()
   const navigate = useNavigate()
 
@@ -103,20 +103,20 @@ export default function SellerProducts() {
     else fetchProducts()
   }
 
-  function handleEdit(product: Product) {
+  function handleEdit(product: ProductWithRelations) {
     setEditingProduct(product)
     setFormData({
       name: product.name,
-      description: product.description,
-      category_id: product.category_id,
-      moq: product.moq,
-      min_price: product.min_price,
-      max_price: product.max_price,
-      images: product.images,
+      description: product.description ?? '',
+      category_id: product.category_id ?? '',
+      moq: product.moq ?? 1,
+      min_price: product.min_price ?? 0,
+      max_price: product.max_price ?? 0,
+      images: product.images ?? [],
       hs_code: product.hs_code || '',
-      lead_time_days: product.lead_time_days,
-      certifications: product.certifications,
-      is_available: product.is_available,
+      lead_time_days: product.lead_time_days ?? 7,
+      certifications: product.certifications ?? [],
+      is_available: product.is_available ?? true,
     })
     setIsDialogOpen(true)
   }
@@ -338,7 +338,7 @@ export default function SellerProducts() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Price:</span>
-                  <span className="font-semibold">${product.min_price.toFixed(2)} - ${product.max_price.toFixed(2)}</span>
+                  <span className="font-semibold">${(product.min_price ?? 0).toFixed(2)} - ${(product.max_price ?? 0).toFixed(2)}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Lead Time:</span>

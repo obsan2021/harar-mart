@@ -130,7 +130,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }
 
   const cartTotal = cartItems.reduce(
-    (total, item) => total + ((item.product.min_price ?? 0) * item.quantity),
+    (total, item) => total + ((item.product?.min_price ?? 0) * item.quantity),
     0
   )
 

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/integrations/supabase/client'
-import type { HouseRental } from '@/integrations/supabase/types'
+import type { HouseRentalWithRelations } from '@/integrations/supabase/types'
 import { useAuth } from '@/contexts/AuthContext'
 import { ImageUpload } from '@/components/ImageUpload'
 import { Button } from '@/components/ui/button'
@@ -61,10 +61,10 @@ const DEFAULT_IMAGE = '/placeholder.svg'
 export default function HouseRentals() {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const [rentals, setRentals] = useState<HouseRental[]>([])
+  const [rentals, setRentals] = useState<HouseRentalWithRelations[]>([])
   const [loading, setLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingRental, setEditingRental] = useState<HouseRental | null>(null)
+  const [editingRental, setEditingRental] = useState<HouseRentalWithRelations | null>(null)
   const [showFilters, setShowFilters] = useState(false)
 
   // Search & Filters
@@ -141,7 +141,7 @@ export default function HouseRentals() {
 
     // Amenities
     if (selectedAmenities.length > 0) {
-      const hasAll = selectedAmenities.every((a) => rental.amenities.includes(a))
+      const hasAll = selectedAmenities.every((a) => (rental.amenities ?? []).includes(a))
       if (!hasAll) return false
     }
 
@@ -168,7 +168,7 @@ export default function HouseRentals() {
     })
   }
 
-  function handleEdit(rental: HouseRental) {
+  function handleEdit(rental: HouseRentalWithRelations) {
     setEditingRental(rental)
     setFormData({
       title: rental.title,
@@ -179,12 +179,12 @@ export default function HouseRentals() {
       square_feet: rental.square_feet?.toString() || '',
       location: rental.location,
       address: rental.address || '',
-      images: rental.images,
-      amenities: rental.amenities,
+      images: rental.images ?? [],
+      amenities: rental.amenities ?? [],
       contact_name: rental.contact_name || '',
       contact_phone: rental.contact_phone || '',
-      contact_type: rental.contact_type || 'owner',
-      listing_type: rental.listing_type || 'rent',
+      contact_type: (rental.contact_type || 'owner') as "owner" | "broker" | "agent",
+      listing_type: (rental.listing_type || 'rent') as "rent" | "sale",
     })
     setIsDialogOpen(true)
   }
@@ -810,16 +810,16 @@ export default function HouseRentals() {
                         {rental.description}
                       </p>
 
-                      {rental.amenities.length > 0 && (
+                      {(rental.amenities ?? []).length > 0 && (
                         <div className="flex flex-wrap gap-1">
-                          {rental.amenities.slice(0, 4).map((amenity) => (
+                          {(rental.amenities ?? []).slice(0, 4).map((amenity: string) => (
                             <Badge key={amenity} variant="outline" className="text-xs">
                               {amenity}
                             </Badge>
                           ))}
-                          {rental.amenities.length > 4 && (
+                          {(rental.amenities ?? []).length > 4 && (
                             <Badge variant="outline" className="text-xs">
-                              +{rental.amenities.length - 4} more
+                              +{(rental.amenities ?? []).length - 4} more
                             </Badge>
                           )}
                         </div>

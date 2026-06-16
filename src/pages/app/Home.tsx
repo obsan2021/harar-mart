@@ -34,11 +34,25 @@ export default function Home() {
 
   // Real product data fetched from the database for the recommendation grid
   const [sampleProducts, setSampleProducts] = useState<ProductCardData[]>([])
+  const [fetchError, setFetchError] = useState<string | null>(null)
 
   useEffect(() => {
+    setFetchError(null)
     fetchCategories()
     fetchVerifiedSellers()
     fetchSampleProducts()
+
+    // Safety timeout: if any query takes > 8 seconds, show error state
+    const timeout = setTimeout(() => {
+      if (categoriesLoading || sellersLoading || productsLoading) {
+        setFetchError('Loading is taking longer than expected. Please check your connection and try again.')
+        setCategoriesLoading(false)
+        setSellersLoading(false)
+        setProductsLoading(false)
+      }
+    }, 8000)
+
+    return () => clearTimeout(timeout)
   }, [])
 
   async function fetchCategories() {
@@ -61,9 +75,10 @@ export default function Home() {
   async function fetchVerifiedSellers() {
     setSellersLoading(true)
     try {
+      // Fetch seller_profiles without joining to users table to avoid RLS recursion
       const { data, error } = await supabase
         .from('seller_profiles')
-        .select('*, users:user_id(*)')
+        .select('*')
         .eq('is_verified', true)
         .limit(6)
       if (data) setVerifiedSellers(data)
@@ -80,7 +95,7 @@ export default function Home() {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('*, seller:seller_profiles(company_name, is_verified, users(country))')
+        .select('*, seller:seller_profiles(company_name, is_verified)')
         .eq('is_available', true)
         .order('created_at', { ascending: false })
         .limit(8)
@@ -98,7 +113,7 @@ export default function Home() {
           priceMax: p.max_price,
           moq: p.moq,
           supplierName: p.seller?.company_name ?? 'Unknown',
-          supplierCountry: p.seller?.users?.country ?? '',
+          supplierCountry: '',
           isVerified: p.seller?.is_verified ?? false,
         })))
       }
@@ -170,13 +185,28 @@ export default function Home() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-          {productsLoading
-            ? Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)
-            : sampleProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-        </div>
+        {fetchError ? (
+          <div className="text-center py-12">
+            <p className="text-destructive mb-4">{fetchError}</p>
+            <Button variant="outline" onClick={() => {
+              setFetchError(null)
+              setProductsLoading(true)
+              fetchSampleProducts()
+            }}>
+              Retry
+            </Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+            {productsLoading
+              ? Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)
+              : sampleProducts.length === 0
+                ? <p className="col-span-full text-center text-muted-foreground py-12">No products yet</p>
+                : sampleProducts.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+          </div>
+        )}
 
         {/* Load More */}
         <div className="flex justify-center mt-8">

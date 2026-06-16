@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '@/integrations/supabase/client'
-import type { Inquiry, Quote } from '@/integrations/supabase/types'
+import type { InquiryWithRelations } from '@/integrations/supabase/types'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -10,7 +10,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { InquiriesSkeleton } from '@/components/app/AppSkeletons'
 
 export default function Inquiries() {
-  const [inquiries, setInquiries] = useState<Inquiry[]>([])
+  const [inquiries, setInquiries] = useState<InquiryWithRelations[]>([])
   const [loading, setLoading] = useState(true)
   const { user, isBuyer } = useAuth()
 
@@ -82,7 +82,7 @@ export default function Inquiries() {
   )
 }
 
-function InquiryList({ inquiries }: { inquiries: Inquiry[] }) {
+function InquiryList({ inquiries }: { inquiries: InquiryWithRelations[] }) {
   if (inquiries.length === 0) {
     return (
       <Card>
@@ -120,7 +120,7 @@ function InquiryList({ inquiries }: { inquiries: Inquiry[] }) {
                   </div>
                   <div className="flex items-center gap-1">
                     <Clock className="h-4 w-4" />
-                    <span>{new Date(inquiry.created_at).toLocaleDateString()}</span>
+                    <span>{new Date(inquiry.created_at ?? '').toLocaleDateString()}</span>
                   </div>
                 </div>
               </div>
@@ -154,7 +154,7 @@ function InquiryList({ inquiries }: { inquiries: Inquiry[] }) {
                   Quotes ({inquiry.quotes.length})
                 </h4>
                 <div className="space-y-3">
-                  {inquiry.quotes.map((quote) => (
+                  {(inquiry.quotes ?? []).map((quote: any) => (
                     <Card key={quote.id} className="bg-muted">
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between mb-2">

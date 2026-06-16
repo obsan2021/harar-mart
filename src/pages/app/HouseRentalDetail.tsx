@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '@/integrations/supabase/client'
-import type { HouseRental, HouseRentalReview } from '@/integrations/supabase/types'
+import type { HouseRentalWithRelations, HouseRentalReview } from '@/integrations/supabase/types'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -34,7 +34,7 @@ export default function HouseRentalDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
-  const [rental, setRental] = useState<HouseRental | null>(null)
+  const [rental, setRental] = useState<HouseRentalWithRelations | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedImage, setSelectedImage] = useState(0)
   const [userRating, setUserRating] = useState(0)
@@ -130,17 +130,17 @@ export default function HouseRentalDetail() {
     )
   }
 
-  const images = rental.images?.length > 0 ? rental.images : [DEFAULT_IMAGE]
-  const reviews = (rental.reviews || []).sort(
-    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  const images = (rental.images?.length ?? 0) > 0 ? rental.images : [DEFAULT_IMAGE]
+  const reviews = ((rental as any).reviews || []).sort(
+    (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   )
   const avgRating = reviews.length > 0
-    ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+    ? reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / reviews.length
     : 0
-  const userReview = user ? reviews.find((r) => r.user_id === user.id) : null
+  const userReview = user ? reviews.find((r: any) => r.user_id === user.id) : null
   const ratingDistribution = [5, 4, 3, 2, 1].map((star) => ({
     star,
-    count: reviews.filter((r) => r.rating === star).length,
+    count: reviews.filter((r: any) => r.rating === star).length,
   }))
 
   const contactLabel = rental.contact_type === 'broker' ? 'Broker'
@@ -159,15 +159,15 @@ export default function HouseRentalDetail() {
         <div className="mb-6">
           <div className="aspect-video bg-muted rounded-xl overflow-hidden mb-3">
             <img
-              src={images[selectedImage]}
+              src={(images ?? [DEFAULT_IMAGE])[selectedImage]}
               alt={rental.title}
               className="w-full h-full object-cover"
               onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_IMAGE }}
             />
           </div>
-          {images.length > 1 && (
+          {(images ?? []).length > 1 && (
             <div className="flex gap-2 overflow-x-auto pb-2">
-              {images.map((img, i) => (
+              {(images ?? []).map((img: string, i: number) => (
                 <button
                   key={i}
                   onClick={() => setSelectedImage(i)}
@@ -232,11 +232,11 @@ export default function HouseRentalDetail() {
               <p className="text-muted-foreground whitespace-pre-wrap">{rental.description}</p>
             </div>
 
-            {rental.amenities.length > 0 && (
+            {(rental.amenities ?? []).length > 0 && (
               <div>
                 <h2 className="font-semibold text-lg mb-3">Amenities</h2>
                 <div className="flex flex-wrap gap-2">
-                  {rental.amenities.map((amenity) => (
+                  {(rental.amenities ?? []).map((amenity: string) => (
                     <Badge key={amenity} variant="outline">{amenity}</Badge>
                   ))}
                 </div>
@@ -335,7 +335,7 @@ export default function HouseRentalDetail() {
 
               {/* Review list */}
               <div className="space-y-4">
-                {reviews.map((review) => (
+                {reviews.map((review: any) => (
                   <Card key={review.id}>
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between mb-2">
@@ -392,16 +392,16 @@ export default function HouseRentalDetail() {
                       {rental.contact_type || 'owner'}
                     </Badge>
                   </div>
-                  <p className="font-medium">{rental.contact_name || rental.user?.full_name || 'Unknown'}</p>
+                  <p className="font-medium">{rental.contact_name || (rental as any).user?.full_name || 'Unknown'}</p>
 
                   <div className="flex items-center gap-2 text-sm">
                     <Phone className="h-4 w-4 text-muted-foreground" />
-                    {rental.contact_phone || rental.user?.phone ? (
+                    {rental.contact_phone || (rental as any).user?.phone ? (
                       <a
-                        href={`tel:${rental.contact_phone || rental.user?.phone}`}
+                        href={`tel:${rental.contact_phone || (rental as any).user?.phone}`}
                         className="text-primary hover:underline"
                       >
-                        {rental.contact_phone || rental.user?.phone}
+                        {rental.contact_phone || (rental as any).user?.phone}
                       </a>
                     ) : (
                       <span className="text-muted-foreground">No phone listed</span>
@@ -443,10 +443,10 @@ export default function HouseRentalDetail() {
 
                   <div className="text-sm text-muted-foreground">
                     <p className="font-medium text-foreground">
-                      Listed by {rental.user?.full_name || 'Unknown'}
+                      Listed by {(rental as any).user?.full_name || 'Unknown'}
                     </p>
                     <p>
-                      Listed on {new Date(rental.created_at).toLocaleDateString('en-US', {
+                      Listed on {new Date(rental.created_at ?? '').toLocaleDateString('en-US', {
                         year: 'numeric',
                         month: 'long',
                         day: 'numeric',

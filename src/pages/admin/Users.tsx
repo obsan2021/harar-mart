@@ -48,7 +48,7 @@ export default function Users() {
                   {user.phone && <p className="text-sm text-muted-foreground">{user.phone}</p>}
                 </div>
                 <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                  {user.role.toUpperCase()}
+                  {(user.role ?? 'buyer').toUpperCase()}
                 </Badge>
               </div>
             ))}
@@ -58,3 +58,4 @@ export default function Users() {
     </div>
   )
 }
+

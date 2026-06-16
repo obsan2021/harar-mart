@@ -63,7 +63,7 @@ export default function Products() {
                   </div>
                   <div>
                     <h3 className="font-semibold">{product.name}</h3>
-                    <p className="text-sm text-muted-foreground">{formatPrice(product.min_price)}</p>
+                    <p className="text-sm text-muted-foreground">{formatPrice(product.min_price ?? 0)}</p>
                     <p className="text-xs text-muted-foreground">MOQ: {product.moq}</p>
                   </div>
                 </div>

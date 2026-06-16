@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/integrations/supabase/client'
-import type { Order } from '@/integrations/supabase/types'
+import type { OrderWithRelations } from '@/integrations/supabase/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { formatPrice, formatDate, getStatusColor } from '@/lib/utils'
 import { OrdersSkeleton } from '@/components/admin/AdminSkeletons'
 
 export default function Orders() {
-  const [orders, setOrders] = useState<Order[]>([])
+  const [orders, setOrders] = useState<OrderWithRelations[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -46,12 +46,12 @@ export default function Orders() {
                 <div>
                   <h3 className="font-semibold">Order #{order.id.slice(0, 8)}</h3>
                   <p className="text-sm text-muted-foreground">
-                    {order.user?.email || 'Unknown'} • {formatDate(order.created_at)}
+                    {order.user?.email || 'Unknown'} • {formatDate(order.created_at ?? '')}
                   </p>
                   <p className="text-sm font-semibold">{formatPrice(order.total)}</p>
                 </div>
-                <Badge variant={getStatusColor(order.status) as any}>
-                  {order.status.replace('_', ' ').toUpperCase()}
+                <Badge variant={getStatusColor(order.status ?? 'pending') as any}>
+                  {(order.status ?? 'pending').replace('_', ' ').toUpperCase()}
                 </Badge>
               </div>
             ))}

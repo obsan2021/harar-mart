@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '@/integrations/supabase/client'
-import type { Product, Category } from '@/integrations/supabase/types'
+import type { ProductWithRelations, Category } from '@/integrations/supabase/types'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -14,7 +14,7 @@ import { CheckCircle, Building2, Search, Filter } from 'lucide-react'
 import { getCountryFlag } from '@/lib/utils'
 
 export default function Shop() {
-  const [products, setProducts] = useState<Product[]>([])
+  const [products, setProducts] = useState<ProductWithRelations[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -73,8 +73,8 @@ export default function Shop() {
   const filteredProducts = products.filter(product => {
     const matchesCategory = !selectedCategory || product.category_id === selectedCategory
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          product.description.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesMOQ = product.moq >= minMOQ && product.moq <= maxMOQ
+                          (product.description ?? '').toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesMOQ = (product.moq ?? 0) >= minMOQ && (product.moq ?? 0) <= maxMOQ
     const matchesCertifications = selectedCertifications.length === 0 ||
       selectedCertifications.some(cert => product.certifications?.includes(cert))
     const matchesSupplierType = selectedSupplierTypes.length === 0 ||
@@ -296,11 +296,11 @@ export default function Shop() {
                     {/* Price Range */}
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-lg font-bold text-primary">
-                        ${product.min_price.toFixed(2)}
+                        ${(product.min_price ?? 0).toFixed(2)}
                       </span>
-                      {product.max_price > product.min_price && (
+                      {(product.max_price ?? 0) > (product.min_price ?? 0) && (
                         <span className="text-sm text-muted-foreground">
-                          - ${product.max_price.toFixed(2)}
+                          - ${(product.max_price ?? 0).toFixed(2)}
                         </span>
                       )}
                     </div>

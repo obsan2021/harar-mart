@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/integrations/supabase/client'
-import type { SellerProfile } from '@/integrations/supabase/types'
+import type { SellerProfileWithRelations } from '@/integrations/supabase/types'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -9,7 +9,7 @@ import { Building2, CheckCircle, XCircle, Shield, MapPin, Calendar } from 'lucid
 import { SellersSkeleton } from '@/components/admin/AdminSkeletons'
 
 export default function AdminSellers() {
-  const [sellers, setSellers] = useState<SellerProfile[]>([])
+  const [sellers, setSellers] = useState<SellerProfileWithRelations[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -95,7 +95,7 @@ function SellerList({
   onReject, 
   showActions = false 
 }: { 
-  sellers: SellerProfile[]
+  sellers: SellerProfileWithRelations[]
   onApprove?: (id: string) => void
   onReject?: (id: string) => void
   showActions?: boolean
@@ -124,7 +124,7 @@ function SellerList({
                   <CardTitle className="text-lg">{seller.company_name}</CardTitle>
                   <div className="flex items-center gap-2 mt-1">
                     <Badge variant="outline" className="capitalize">
-                      {seller.supplier_type.replace('_', ' ')}
+                      {seller.supplier_type?.replace('_', ' ') ?? ''}
                     </Badge>
                     {seller.is_verified && (
                       <Badge variant="default" className="bg-green-500">
@@ -177,7 +177,7 @@ function SellerList({
               )}
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span>Joined: {new Date(seller.created_at).toLocaleDateString()}</span>
+                <span>Joined: {new Date(seller.created_at ?? '').toLocaleDateString()}</span>
               </div>
             </div>
 
@@ -188,7 +188,7 @@ function SellerList({
                   <span className="font-semibold text-sm">Certifications</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {seller.certifications.map((cert) => (
+                  {seller.certifications.map((cert: string) => (
                     <Badge key={cert} variant="secondary">
                       {cert}
                     </Badge>

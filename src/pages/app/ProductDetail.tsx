@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { supabase } from '@/integrations/supabase/client'
-import type { Product, SellerProfile } from '@/integrations/supabase/types'
+import type { ProductWithRelations, SellerProfile } from '@/integrations/supabase/types'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -15,7 +15,7 @@ import { ProductDetailSkeleton } from '@/components/app/AppSkeletons'
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>()
-  const [product, setProduct] = useState<Product | null>(null)
+  const [product, setProduct] = useState<ProductWithRelations | null>(null)
   const [loading, setLoading] = useState(true)
   const [quantity, setQuantity] = useState('')
   const [message, setMessage] = useState('')
@@ -137,13 +137,13 @@ export default function ProductDetail() {
           <div className="mb-4">
             <div className="flex items-baseline gap-2">
               <span className="text-3xl font-bold text-primary">
-                ${product.min_price.toFixed(2)}
+                ${(product.min_price ?? 0).toFixed(2)}
               </span>
-              {product.max_price > product.min_price && (
+              {(product.max_price ?? 0) > (product.min_price ?? 0) && (
                 <>
                   <span className="text-xl text-muted-foreground">-</span>
                   <span className="text-xl font-bold text-primary">
-                    ${product.max_price.toFixed(2)}
+                    ${(product.max_price ?? 0).toFixed(2)}
                   </span>
                 </>
               )}
@@ -184,7 +184,7 @@ export default function ProductDetail() {
                 <span className="font-semibold">Certifications</span>
               </div>
               <div className="flex flex-wrap gap-2">
-                {product.certifications.map((cert) => (
+                {product.certifications.map((cert: string) => (
                   <Badge key={cert} variant="outline">
                     {cert}
                   </Badge>
@@ -223,7 +223,7 @@ export default function ProductDetail() {
                 <div>
                   <h3 className="text-xl font-semibold">{product.seller.company_name}</h3>
                   <p className="text-muted-foreground capitalize">
-                    {product.seller.supplier_type.replace('_', ' ')}
+                    {product.seller?.supplier_type?.replace('_', ' ') ?? ''}
                   </p>
                   {product.seller.user?.country && (
                     <p className="text-sm text-muted-foreground">{product.seller.user.country}</p>
@@ -242,7 +242,7 @@ export default function ProductDetail() {
               <div className="mb-4">
                 <span className="text-sm text-muted-foreground">Certifications: </span>
                 <div className="flex flex-wrap gap-2 mt-2">
-                  {product.seller.certifications.map((cert) => (
+                  {product.seller.certifications.map((cert: string) => (
                     <Badge key={cert} variant="secondary">
                       {cert}
                     </Badge>
@@ -284,7 +284,7 @@ export default function ProductDetail() {
                 <Input
                   id="quantity"
                   type="number"
-                  min={product.moq}
+                  min={product.moq ?? 1}
                   placeholder={`Minimum: ${product.moq} units`}
                   value={quantity}
                   onChange={(e) => setQuantity(e.target.value)}
@@ -336,3 +336,5 @@ export default function ProductDetail() {
     </div>
   )
 }
+
+

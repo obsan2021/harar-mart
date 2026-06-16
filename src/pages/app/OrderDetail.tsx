@@ -7,13 +7,13 @@ import { Button } from '@/components/ui/button'
 import { formatDate, formatPrice, getStatusColor } from '@/lib/utils'
 import { Package, ArrowLeft, Calendar, MapPin, Phone } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client'
-import type { Order } from '@/integrations/supabase/types'
+import type { OrderWithRelations } from '@/integrations/supabase/types'
 import { OrderDetailSkeleton } from '@/components/app/AppSkeletons'
 
 export default function OrderDetail() {
   const { id } = useParams<{ id: string }>()
   const { user } = useAuth()
-  const [order, setOrder] = useState<Order | null>(null)
+  const [order, setOrder] = useState<OrderWithRelations | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -85,13 +85,13 @@ export default function OrderDetail() {
               <CardTitle>Order Status</CardTitle>
             </CardHeader>
             <CardContent>
-              <Badge variant={getStatusColor(order.status) as any} className="text-base px-4 py-2">
-                {order.status.replace('_', ' ').toUpperCase()}
+              <Badge variant={getStatusColor(order.status ?? 'pending') as any} className="text-base px-4 py-2">
+                {(order.status ?? 'pending').replace('_', ' ').toUpperCase()}
               </Badge>
               <div className="mt-4 space-y-2 text-sm">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Calendar className="h-4 w-4" />
-                  <span>Placed on {formatDate(order.created_at)}</span>
+                  <span>Placed on {formatDate(order.created_at ?? '')}</span>
                 </div>
               </div>
             </CardContent>
@@ -103,7 +103,7 @@ export default function OrderDetail() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {order.items.map((item) => (
+                {(order.items ?? []).map((item: any) => (
                   <div key={item.id} className="flex items-center gap-4">
                     <div className="w-16 h-16 bg-muted rounded-md flex items-center justify-center flex-shrink-0">
                       {item.product.images?.[0] ? (
@@ -166,7 +166,7 @@ export default function OrderDetail() {
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">{order.delivery_phone}</span>
+                <span className="text-sm">{(order as any).delivery_phone}</span>
               </div>
               {order.delivery_notes && (
                 <div className="text-sm text-muted-foreground">

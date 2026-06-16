@@ -76,7 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const selectUserRow = async () => {
         return supabase
           .from('users')
-          .select('id, email, full_name, phone, address, role, created_at, is_verified, country')
+          .select('id, email, full_name, phone, address, role, created_at, updated_at, is_verified, country')
           .eq('id', userId)
           .maybeSingle()
       }
@@ -99,6 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             address: null,
             is_verified: false,
             country: null,
+            updated_at: new Date().toISOString(),
           })
           setLoading(false)
           return
@@ -118,6 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             is_verified: false,
             country: null,
             created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
           })
           setLoading(false)
           return
@@ -159,6 +161,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               is_verified: false,
               country: null,
               created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
             })
             setLoading(false)
             return
@@ -172,6 +175,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               address: newUser.address || null,
               is_verified: newUser.is_verified || false,
               country: newUser.country || null,
+              updated_at: newUser.updated_at || new Date().toISOString(),
             })
             setLoading(false)
             return
@@ -187,6 +191,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             is_verified: false,
             country: null,
             created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
           })
           setLoading(false)
           return
@@ -203,6 +208,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         address: data.address || null,
         is_verified: data.is_verified || false,
         country: data.country || null,
+        updated_at: data.updated_at || new Date().toISOString(),
       })
 
       if (data.role === 'seller') {
@@ -236,6 +242,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           is_verified: false,
           country: null,
           created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         })
         setProfileFetchError(null)
       } else {

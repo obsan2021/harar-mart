@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/integrations/supabase/client'
-import type { Inquiry, Quote } from '@/integrations/supabase/types'
+import type { InquiryWithRelations, Quote } from '@/integrations/supabase/types'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -15,10 +15,10 @@ import { useAuth } from '@/contexts/AuthContext'
 import { SellerInquiriesSkeleton } from '@/components/app/AppSkeletons'
 
 export default function SellerInquiries() {
-  const [inquiries, setInquiries] = useState<Inquiry[]>([])
+  const [inquiries, setInquiries] = useState<InquiryWithRelations[]>([])
   const [loading, setLoading] = useState(true)
   const [isReplyDialogOpen, setIsReplyDialogOpen] = useState(false)
-  const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null)
+  const [selectedInquiry, setSelectedInquiry] = useState<InquiryWithRelations | null>(null)
   const { sellerProfile, isSeller } = useAuth()
 
   // Quote form state
@@ -79,7 +79,7 @@ export default function SellerInquiries() {
     }
   }
 
-  function handleReply(inquiry: Inquiry) {
+  function handleReply(inquiry: InquiryWithRelations) {
     setSelectedInquiry(inquiry)
     setIsReplyDialogOpen(true)
   }
@@ -241,8 +241,8 @@ function InquiryList({
   onReply, 
   showReplyButton = false 
 }: { 
-  inquiries: Inquiry[]
-  onReply?: (inquiry: Inquiry) => void
+  inquiries: InquiryWithRelations[]
+  onReply?: (inquiry: InquiryWithRelations) => void
   showReplyButton?: boolean
 }) {
   if (inquiries.length === 0) {
@@ -282,7 +282,7 @@ function InquiryList({
                   </div>
                   <div className="flex items-center gap-1">
                     <Clock className="h-4 w-4" />
-                    <span>{new Date(inquiry.created_at).toLocaleDateString()}</span>
+                    <span>{new Date(inquiry.created_at ?? '').toLocaleDateString()}</span>
                   </div>
                 </div>
               </div>
@@ -313,7 +313,7 @@ function InquiryList({
               <div className="border-t pt-4">
                 <h4 className="font-semibold mb-3">Your Quotes ({inquiry.quotes.length})</h4>
                 <div className="space-y-2">
-                  {inquiry.quotes.map((quote) => (
+                  {(inquiry.quotes ?? []).map((quote: any) => (
                     <Card key={quote.id} className="bg-muted">
                       <CardContent className="p-3">
                         <div className="flex items-center justify-between">

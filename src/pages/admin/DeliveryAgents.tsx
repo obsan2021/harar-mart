@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '@/integrations/supabase/client'
-import type { DeliveryAgent } from '@/integrations/supabase/types'
+import type { DeliveryAgentWithRelations } from '@/integrations/supabase/types'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -8,7 +8,7 @@ import { Plus } from 'lucide-react'
 import { SimpleListSkeleton } from '@/components/admin/AdminSkeletons'
 
 export default function DeliveryAgents() {
-  const [agents, setAgents] = useState<DeliveryAgent[]>([])
+  const [agents, setAgents] = useState<DeliveryAgentWithRelations[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {

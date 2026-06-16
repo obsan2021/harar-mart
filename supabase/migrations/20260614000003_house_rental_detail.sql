@@ -21,20 +21,24 @@ CREATE INDEX IF NOT EXISTS idx_house_reviews_rental ON house_rental_reviews(rent
 ALTER TABLE house_rental_reviews ENABLE ROW LEVEL SECURITY;
 
 -- Anyone can read reviews
+DROP POLICY IF EXISTS "Anyone can read reviews" ON house_rental_reviews;
 CREATE POLICY "Anyone can read reviews"
   ON house_rental_reviews FOR SELECT USING (true);
 
 -- Authenticated users can insert their own review (one per listing)
+DROP POLICY IF EXISTS "Users can insert one review per listing" ON house_rental_reviews;
 CREATE POLICY "Users can insert one review per listing"
   ON house_rental_reviews FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
 -- Users can update their own review
+DROP POLICY IF EXISTS "Users can update their own review" ON house_rental_reviews;
 CREATE POLICY "Users can update their own review"
   ON house_rental_reviews FOR UPDATE
   USING (auth.uid() = user_id);
 
 -- Users can delete their own review
+DROP POLICY IF EXISTS "Users can delete their own review" ON house_rental_reviews;
 CREATE POLICY "Users can delete their own review"
   ON house_rental_reviews FOR DELETE
   USING (auth.uid() = user_id);
