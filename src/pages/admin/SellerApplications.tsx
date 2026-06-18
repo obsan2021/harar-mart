@@ -57,15 +57,27 @@ export default function SellerApplications() {
     } else {
       setRefreshing(true)
     }
-    const { data, error } = await supabase
+    // Use direct query with separate user fetch to avoid RLS join issues
+    const { data: fallbackData, error: fallbackError } = await supabase
       .from('seller_applications')
-      .select('*, users(email, full_name)')
+      .select('*')
       .order('created_at', { ascending: false })
-
-    if (error) {
-      console.error('Error fetching applications:', error)
-    } else if (data) {
-      setApplications(data as unknown as Application[])
+    
+    if (fallbackError) {
+      console.error('Error fetching applications:', fallbackError)
+    } else if (fallbackData) {
+      // Fetch user data separately to avoid RLS join issues
+      const userIds = fallbackData.map(app => app.user_id)
+      const { data: usersData } = await supabase
+        .from('users')
+        .select('id, email, full_name')
+        .in('id', userIds)
+      
+      const applicationsWithUsers = fallbackData.map(app => ({
+        ...app,
+        users: usersData?.find(u => u.id === app.user_id) || { email: '', full_name: null }
+      }))
+      setApplications(applicationsWithUsers as unknown as Application[])
     }
     if (isInitial) {
       setInitialLoading(false)
