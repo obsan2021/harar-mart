@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
-import { Package, MessageSquare, Building2, LogOut } from 'lucide-react'
+import { Package, MessageSquare, Building2, LogOut, Home } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 export default function SellerLayout() {
@@ -44,25 +44,37 @@ export default function SellerLayout() {
       <div className="container mx-auto px-4 py-8 flex gap-8">
         {/* Sidebar */}
         <aside className="w-64 flex-shrink-0">
-          <nav className="space-y-2">
-            {menuItems.map((item) => {
-              const Icon = item.icon
-              const isActive = location.pathname === item.path
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    isActive
-                      ? 'bg-primary text-primary-foreground'
-                      : 'hover:bg-muted'
-                  }`}
-                >
-                  <Icon className="h-5 w-5" />
-                  <span>{item.label}</span>
-                </Link>
-              )
-            })}
+          <nav className="space-y-2 flex flex-col h-full justify-between">
+            <div className="space-y-2">
+              {menuItems.map((item) => {
+                const Icon = item.icon
+                const isActive = location.pathname === item.path
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                      isActive
+                        ? 'bg-primary text-primary-foreground'
+                        : 'hover:bg-muted'
+                    }`}
+                  >
+                    <Icon className="h-5 w-5" />
+                    <span>{item.label}</span>
+                  </Link>
+                )
+              })}
+            </div>
+            
+            <div className="pt-4 border-t border-border mt-8">
+              <Link
+                to="/"
+                className="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors hover:bg-muted text-muted-foreground hover:text-foreground border border-dashed border-border"
+              >
+                <Home className="h-5 w-5" />
+                <span className="font-medium">Back to Home Page</span>
+              </Link>
+            </div>
           </nav>
         </aside>
 
