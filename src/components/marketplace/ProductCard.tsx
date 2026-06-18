@@ -96,13 +96,13 @@ export default function ProductCard({ product }: ProductCardProps) {
           {/* Price Range */}
           <div className="flex items-baseline gap-1">
             <span className="text-base font-bold text-primary price-amount">
-              ${product.priceMin.toFixed(2)}
+              ${(product.priceMin ?? 0).toFixed(2)}
             </span>
             {product.priceMax > product.priceMin && (
               <>
                 <span className="text-muted-foreground"> - </span>
                 <span className="text-base font-bold text-primary price-amount">
-                  ${product.priceMax.toFixed(2)}
+                  ${(product.priceMax ?? 0).toFixed(2)}
                 </span>
               </>
             )}

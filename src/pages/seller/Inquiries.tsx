@@ -318,7 +318,7 @@ function InquiryList({
                       <CardContent className="p-3">
                         <div className="flex items-center justify-between">
                           <div>
-                            <span className="font-semibold">${quote.price_per_unit.toFixed(2)}/unit</span>
+                            <span className="font-semibold">${(quote.price_per_unit ?? 0).toFixed(2)}/unit</span>
                             {quote.sample_available && (
                               <Badge variant="secondary" className="ml-2">Sample Available</Badge>
                             )}

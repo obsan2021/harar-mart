@@ -254,7 +254,7 @@ export default function HouseRentalDetail() {
                   <CardContent className="p-6">
                     <div className="flex items-start gap-8">
                       <div className="text-center">
-                        <div className="text-4xl font-bold">{avgRating.toFixed(1)}</div>
+                        <div className="text-4xl font-bold">{(avgRating ?? 0).toFixed(1)}</div>
                         <div className="flex items-center gap-0.5 mt-1">
                           {[1, 2, 3, 4, 5].map((star) => (
                             <Star

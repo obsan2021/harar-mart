@@ -159,7 +159,7 @@ function InquiryList({ inquiries }: { inquiries: InquiryWithRelations[] }) {
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
-                            <span className="font-semibold">${quote.price_per_unit.toFixed(2)}/unit</span>
+                            <span className="font-semibold">${(quote.price_per_unit ?? 0).toFixed(2)}/unit</span>
                             {quote.sample_available && (
                               <Badge variant="secondary">Sample Available</Badge>
                             )}
@@ -174,7 +174,7 @@ function InquiryList({ inquiries }: { inquiries: InquiryWithRelations[] }) {
                         {quote.sample_price && (
                           <div className="text-sm mt-2">
                             <span className="text-muted-foreground">Sample Price: </span>
-                            <span>${quote.sample_price.toFixed(2)}</span>
+                            <span>${(quote.sample_price ?? 0).toFixed(2)}</span>
                           </div>
                         )}
                       </CardContent>
