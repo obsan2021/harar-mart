@@ -140,7 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       setUser(userData)
 
-      if (userData.role === 'seller') {
+      if (userData.role === 'seller' || userData.role === 'admin') {
         const { data: sellerData, error: sellerError } = await supabase
           .from('seller_profiles')
           .select('*')
@@ -295,7 +295,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signInWithGoogle,
     signOut,
     isAdmin: user?.role === 'admin',
-    isSeller: user?.role === 'seller',
+    isSeller: user?.role === 'seller' || user?.role === 'admin',
     isBuyer: user?.role === 'buyer',
     isVerified: user?.is_verified || false,
   }

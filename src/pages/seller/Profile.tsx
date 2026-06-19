@@ -33,7 +33,7 @@ export default function SellerProfile() {
       setFormData({
         company_name: sellerProfile.company_name,
         tax_id: sellerProfile.tax_id || '',
-        supplier_type: sellerProfile.supplier_type,
+        supplier_type: (sellerProfile.supplier_type as 'manufacturer' | 'trading_company' | 'wholesaler') || 'manufacturer',
         certifications: sellerProfile.certifications || [],
         business_license_url: sellerProfile.business_license_url || '',
       })
@@ -116,7 +116,7 @@ export default function SellerProfile() {
                       </Badge>
                     )}
                     <Badge variant="outline" className="capitalize">
-                      {sellerProfile.supplier_type.replace('_', ' ')}
+                      {(sellerProfile.supplier_type || 'manufacturer').replace('_', ' ')}
                     </Badge>
                   </div>
                 </div>
@@ -137,7 +137,7 @@ export default function SellerProfile() {
               )}
               <div className="text-sm">
                 <span className="text-muted-foreground">Member Since: </span>
-                <span>{new Date(sellerProfile.created_at).toLocaleDateString()}</span>
+                <span>{new Date(sellerProfile.created_at || Date.now()).toLocaleDateString()}</span>
               </div>
 
               {sellerProfile.certifications && sellerProfile.certifications.length > 0 && (
@@ -262,7 +262,7 @@ export default function SellerProfile() {
             userEmail={user?.email || ''}
             userName={user?.full_name || user?.email || ''}
             sellerProfileId={sellerProfile.id}
-            currentStatus={sellerProfile.didit_verification_status || 'not_started'}
+            currentStatus={(sellerProfile.didit_verification_status || 'not_started') as 'not_started' | 'pending' | 'approved' | 'declined' | 'expired'}
             currentSessionId={sellerProfile.didit_session_id}
           />
 
@@ -323,7 +323,7 @@ export default function SellerProfile() {
                         <h3 className="font-semibold line-clamp-1 mb-2">{product.name}</h3>
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-primary font-semibold">
-                            ${product.min_price.toFixed(2)}
+                            ${(product.min_price ?? 0).toFixed(2)}
                           </span>
                           <span className="text-muted-foreground">MOQ: {product.moq}</span>
                         </div>

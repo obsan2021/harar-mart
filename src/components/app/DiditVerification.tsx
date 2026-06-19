@@ -89,7 +89,10 @@ export default function DiditVerification({
     setCheckingStatus(true)
     try {
       const result = await getVerificationStatus(targetSessionId)
-      setStatus(result.status)
+      const mappedStatus = (['approved', 'declined', 'pending', 'expired', 'not_started'] as const).includes(result.status as never)
+        ? (result.status as typeof status)
+        : 'pending'
+      setStatus(mappedStatus)
 
       // Update the database with the latest status
       await supabase
